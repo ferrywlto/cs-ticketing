@@ -1,31 +1,40 @@
 @page "/player/login"
+@layout TicketLayout
 
 <PageTitle>Customer Login</PageTitle>
 
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Customer Login</h3>
-                </div>
-                <div class="card-body">
-                    <div class="alert alert-info">
-                        <h5>🚧 Under Construction</h5>
-                        <p class="mb-0">Customer authentication is being developed.</p>
+<div class="d-flex align-items-center justify-content-center h-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-header">
+                        <h3 class="text-center mb-0">Customer Login</h3>
                     </div>
-                    
-                    <form>
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" placeholder="Enter your email" disabled>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <h5>🚧 Under Construction</h5>
+                            <p class="mb-0">Customer authentication is being developed.</p>
                         </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" placeholder="Enter your password" disabled>
+                        
+                        <form>
+                            <div class="mb-3">
+                                <label for="player-email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="player-email" placeholder="Enter your email" disabled>
+                            </div>
+                            <div class="mb-3">
+                                <label for="player-password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="player-password" placeholder="Enter your password" disabled>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" disabled>Sign In</button>
+                        </form>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                Demo: <a href="/player/tickets" class="text-decoration-none">Go to Player Tickets</a>
+                            </small>
                         </div>
-                        <button type="submit" class="btn btn-primary w-100" disabled>Sign In</button>
-                    </form>
+                    </div>
                 </div>
             </div>
         </div>

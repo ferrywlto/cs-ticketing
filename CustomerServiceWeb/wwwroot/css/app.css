@@ -1,0 +1,61 @@
+/* Existing CSS... */
+
+/* Ticketing System Styles */
+.ticket-list-item {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.ticket-list-item:hover {
+    background-color: #f8f9fa;
+}
+
+.ticket-list-item.selected {
+    background-color: #e3f2fd;
+    border-left: 4px solid #1976d2;
+}
+
+.avatar-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-item .card {
+    border-left-width: 4px;
+}
+
+.message-item .card.border-success {
+    border-left-color: #28a745 !important;
+}
+
+.message-item .card.border-primary {
+    border-left-color: #007bff !important;
+}
+
+/* Full height layout */
+html, body {
+    height: 100%;
+}
+
+#app {
+    height: 100vh;
+}
+
+.container-fluid.h-100 {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Scrollable areas */
+.overflow-auto {
+    max-height: calc(100vh - 200px);
+}
+
+/* Bootstrap Icons support */
+.bi {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    fill: currentcolor;
+}

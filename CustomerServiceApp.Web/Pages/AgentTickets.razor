@@ -1,22 +1,21 @@
-@page "/tickets"
+@page "/agent/tickets"
+@layout TicketLayout
 
-<PageTitle>Support Tickets</PageTitle>
+<PageTitle>Support Tickets - CS Agent</PageTitle>
 
 <div class="container-fluid h-100">
     <div class="row h-100">
-        <!-- Left Panel: New Ticket Button + Ticket List -->
+        <!-- Left Panel: Ticket List (No New Ticket Button for Agents) -->
         <div class="col-md-4 border-end">
             <div class="d-flex flex-column h-100">
-                <!-- New Ticket Button -->
+                <!-- Header for Agent View -->
                 <div class="p-3 border-bottom">
-                    <button class="btn btn-primary w-100" @onclick="CreateNewTicket">
-                        <i class="bi bi-plus-circle"></i> New ticket
-                    </button>
+                    <h5 class="mb-0 text-muted">Unresolved Tickets</h5>
                 </div>
                 
                 <!-- Ticket List -->
                 <div class="flex-grow-1 overflow-auto">
-                    @foreach (var ticket in TicketList)
+                    @foreach (var ticket in UnresolvedTickets)
                     {
                         <div class="ticket-list-item p-3 border-bottom @(ticket.Id == selectedTicketId ? "selected" : "")" 
                              @onclick="() => SelectTicket(ticket.Id)">
@@ -126,11 +125,13 @@
 
 @code {
     private int? selectedTicketId;
-    private TicketViewModel? selectedTicket => TicketList.FirstOrDefault(t => t.Id == selectedTicketId);
+    private TicketViewModel? selectedTicket => UnresolvedTickets.FirstOrDefault(t => t.Id == selectedTicketId);
     private string replyText = "";
 
-    // Sample data - replace with actual data service
-    private List<TicketViewModel> TicketList = new()
+    // Sample data - only unresolved tickets from all players
+    private List<TicketViewModel> UnresolvedTickets => AllTickets.Where(t => t.Status != "Resolved").ToList();
+
+    private List<TicketViewModel> AllTickets = new()
     {
         new TicketViewModel
         {
@@ -191,24 +192,29 @@
             CreatedDate = DateTime.Now.AddDays(-1),
             Status = "Open",
             Messages = new()
+        },
+        new TicketViewModel
+        {
+            Id = 5,
+            Title = "Payment issue",
+            Description = "Payment was charged but game access not granted.",
+            PlayerName = "Mike Johnson",
+            PlayerId = "123456",
+            CreatedDate = DateTime.Now.AddDays(-4),
+            Status = "Resolved", // This should not show in agent view
+            Messages = new()
         }
     };
 
     protected override void OnInitialized()
     {
-        // Auto-select first ticket
-        selectedTicketId = TicketList.FirstOrDefault()?.Id;
+        // Auto-select first unresolved ticket
+        selectedTicketId = UnresolvedTickets.FirstOrDefault()?.Id;
     }
 
     private void SelectTicket(int ticketId)
     {
         selectedTicketId = ticketId;
-    }
-
-    private void CreateNewTicket()
-    {
-        // TODO: Implement new ticket creation
-        Console.WriteLine("Create new ticket clicked");
     }
 
     private void ResolveTicket()
@@ -218,6 +224,11 @@
             selectedTicket.Status = "Resolved";
             // TODO: Implement resolve ticket logic
             Console.WriteLine($"Resolve ticket {selectedTicket.Id}");
+            
+            // Select next unresolved ticket after resolving current one
+            var remainingTickets = UnresolvedTickets;
+            selectedTicketId = remainingTickets.FirstOrDefault()?.Id;
+            StateHasChanged();
         }
     }
 

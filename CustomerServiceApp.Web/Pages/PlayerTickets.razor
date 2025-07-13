@@ -1,6 +1,7 @@
-@page "/tickets"
+@page "/player/tickets"
+@layout TicketLayout
 
-<PageTitle>Support Tickets</PageTitle>
+<PageTitle>My Support Tickets</PageTitle>
 
 <div class="container-fluid h-100">
     <div class="row h-100">
@@ -98,10 +99,10 @@
                     <div class="p-3 border-top">
                         <div class="d-flex align-items-start">
                             <div class="avatar-placeholder me-3">
-                                <i class="bi bi-shield-fill fs-4 text-success"></i>
+                                <i class="bi bi-person-circle fs-4 text-primary"></i>
                             </div>
                             <div class="flex-grow-1">
-                                <textarea class="form-control mb-2" rows="3" placeholder="Type your reply..." @bind="replyText"></textarea>
+                                <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText"></textarea>
                                 <button class="btn btn-primary" @onclick="SendReply">
                                     <i class="bi bi-send"></i> Send
                                 </button>
@@ -129,8 +130,11 @@
     private TicketViewModel? selectedTicket => TicketList.FirstOrDefault(t => t.Id == selectedTicketId);
     private string replyText = "";
 
-    // Sample data - replace with actual data service
-    private List<TicketViewModel> TicketList = new()
+    // Sample data - only current player's tickets
+    private List<TicketViewModel> TicketList => AllTickets.Where(t => t.PlayerId == CurrentPlayerId).ToList();
+    private string CurrentPlayerId = "987654"; // Demo: Logged in as Jane Doe
+
+    private List<TicketViewModel> AllTickets = new()
     {
         new TicketViewModel
         {
@@ -191,6 +195,28 @@
             CreatedDate = DateTime.Now.AddDays(-1),
             Status = "Open",
             Messages = new()
+        },
+        new TicketViewModel
+        {
+            Id = 5,
+            Title = "Payment issue",
+            Description = "Payment was charged but game access not granted.",
+            PlayerName = "Mike Johnson",
+            PlayerId = "123456",
+            CreatedDate = DateTime.Now.AddDays(-4),
+            Status = "Open",
+            Messages = new()
+        },
+        new TicketViewModel
+        {
+            Id = 6,
+            Title = "Another player ticket",
+            Description = "This ticket belongs to another player and should not be visible.",
+            PlayerName = "Different Player",
+            PlayerId = "999999",
+            CreatedDate = DateTime.Now.AddDays(-1),
+            Status = "Open",
+            Messages = new()
         }
     };
 
@@ -228,8 +254,8 @@
             selectedTicket.Messages.Add(new MessageViewModel
             {
                 Content = replyText,
-                SenderName = "CS Agent",
-                IsFromAgent = true,
+                SenderName = selectedTicket.PlayerName,
+                IsFromAgent = false,
                 CreatedDate = DateTime.Now
             });
             replyText = "";
