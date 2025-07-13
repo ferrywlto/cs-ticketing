@@ -38,29 +38,24 @@ TBD
     2. Customer Service Agent (Agent) - Who handle the customer support tickets.
     3. Ticket - Initiated by a player of what happened. 
     4. Reply - Initiated by either a player or an agent.
-    5. Thread - The list of messages from player and agents for a particular ticket.
 - Each message contains:
     - What - The message content
     - Who - A player / an agent
     - When - The time
-- Each thread contains:
-    - Ticket - The initiating ticket from player
-    - Messages - A list of messages from both player and agents, sort by message date in ascending order.
-    - Status - Reflect the ticket status
-    - CreatedDate - The timestamp that the thread created.
-    - LastUpdateDate - The timestamp that the thread created, the last message created in that thread or when the ticket is resolved.
 - Each player and agent is a person that:
     - Has an email as identifier.
     - Has a name
-    - Has an avatar
+    - Has an avatar in blob url format
+    - Has password hash
     - Player has an additional field: player number
 - Each ticket contains:
     - Creator - Player
     - Status - from ["Open", "In Resolution", "Resolved"], the initial status is open. When ever an agent replies the ticket status will change to in resolution if it is in open status. When an agent click resolve, and the ticket is in resolution status, it will change to resolved.
     - Title - Ticket title
     - Description - Message content
-    - Created date
-    -  
+    - CreatedDate - The timestamp that the thread created.
+    - LastUpdateDate - The timestamp that the thread created, the last message created in that thread or when the ticket is resolved.
+    - Messages - A list of messages from both player and agents, sort by message date in ascending order.
 
 ## Assumptions
 - Once a message is send, it cannot be edited for integrity.
@@ -81,7 +76,6 @@ TBD
 - Using Entity Framework is not mandatory, as a clear data access layer should abstract the infrastructure and underlying implementation details. The same data access API should work with different storage provider interfaces.
 - Basic username and password are used as authentication mechanism as the project is not aim for secure production use, in real world we should use more secure approach like OAuth + MFA. 
 - Due to the same reason the agent or user account management is not included in this project.
-
 
 ## Design
 - We will use .NET Aspire to orchestrate the following projects:
@@ -109,10 +103,31 @@ TBD
 - Cloud deployment
 - Caching mechanism for to improve frequent reading tickets loading time.  
 - Using Signalr for ticket update notifications.
+- Paging mechanism for loading tickets and messages in a ticket thread.
 
 ## Change Log
 
 ### Version 1.2.0 (Current)
+- **CustomerServiceApp.Domain v1.2.0**: Complete domain model implementation with modern C# patterns and comprehensive business logic
+  - **NEW**: `User` abstract base class with email validation and common properties using modern data annotations
+  - **NEW**: `Player` entity extending User with PlayerNumber validation and PasswordHash field
+  - **NEW**: `Agent` entity extending User for CS agents with PasswordHash field
+  - **NEW**: `Ticket` aggregate root with complete conversation management and status workflow
+  - **NEW**: `Reply` entity for ticket conversations with simplified author tracking
+  - **NEW**: `TicketStatus` enum for ticket state management (Open → InResolution → Resolved)
+  - **NEW**: `UserType` enum for user classification
+  - **Feature**: Modern C# patterns with `required` properties and init-only setters for immutability
+  - **Feature**: Microsoft validation framework using `[Required]` and `[EmailAddress]` attributes
+  - **Feature**: Ticket conversation management with Messages collection and chronological ordering
+  - **Feature**: Automatic status transitions (agent replies trigger Open → InResolution)
+  - **Feature**: LastUpdateDate tracking for ticket modifications and message additions
+  - **Feature**: Comprehensive business logic validation and proper error handling
+  - **Feature**: AddReply method with agent detection and status change logic
+  - **Feature**: Resolve method with proper validation (only from InResolution status)
+  - **Feature**: Read-only Messages collection with chronological sorting
+  - **Testing**: 16 comprehensive unit tests with 100% coverage across entire domain layer
+  - **Quality**: Zero warnings with TreatWarningsAsErrors enabled, clean architecture principles
+
 - **CustomerServiceApp.Web v1.2.0**: Removed navigation bars from login pages
   - Applied `TicketLayout` to both `/player/login` and `/agent/login` pages
   - Implemented full-screen login interface with centered vertical alignment
