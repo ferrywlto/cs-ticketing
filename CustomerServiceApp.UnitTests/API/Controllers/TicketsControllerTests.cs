@@ -1,7 +1,7 @@
 using CustomerServiceApp.API.Controllers;
 using CustomerServiceApp.Application.Common.DTOs;
-using CustomerServiceApp.Application.Common.Interfaces;
 using CustomerServiceApp.Application.Common.Models;
+using CustomerServiceApp.Application.Tickets;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -322,5 +322,488 @@ public class TicketsControllerTests
 
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(response.Result);
         Assert.Equal("Ticket not found", notFoundResult.Value);
+    }
+
+    [Fact]
+    public async Task CreateTicket_LogsInformation()
+    {
+        var createDto = new CreateTicketDto
+        {
+            Title = "Test Ticket",
+            Description = "Test Description",
+            CreatorId = Guid.NewGuid()
+        };
+
+        var creatorDto = new PlayerDto
+        {
+            Id = createDto.CreatorId,
+            Email = "player@example.com",
+            Name = "Test Player",
+            PlayerNumber = "P001"
+        };
+
+        var ticketDto = new TicketDto
+        {
+            Id = Guid.NewGuid(),
+            Title = createDto.Title,
+            Description = createDto.Description,
+            Creator = creatorDto,
+            CreatedDate = DateTime.UtcNow,
+            LastUpdateDate = DateTime.UtcNow
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
+                         .ReturnsAsync(result);
+
+        await _controller.CreateTicket(createDto);
+
+        // Verify information logging for ticket creation attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Creating new ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully created ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateTicket_WithFailure_LogsWarning()
+    {
+        var createDto = new CreateTicketDto
+        {
+            Title = "Test Ticket",
+            Description = "Test Description",
+            CreatorId = Guid.NewGuid()
+        };
+
+        var result = Result<TicketDto>.Failure("Creator not found");
+        _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
+                         .ReturnsAsync(result);
+
+        await _controller.CreateTicket(createDto);
+
+        // Verify warning logging for failed creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to create ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTicket_LogsInformation()
+    {
+        var ticketId = Guid.NewGuid();
+        var creatorDto = new PlayerDto
+        {
+            Id = Guid.NewGuid(),
+            Email = "player@example.com",
+            Name = "Test Player",
+            PlayerNumber = "P001"
+        };
+
+        var ticketDto = new TicketDto
+        {
+            Id = ticketId,
+            Title = "Test Ticket",
+            Description = "Test Description",
+            Creator = creatorDto,
+            CreatedDate = DateTime.UtcNow,
+            LastUpdateDate = DateTime.UtcNow
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        await _controller.GetTicket(ticketId);
+
+        // Verify information logging for retrieval attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Retrieving ticket with ID")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful retrieval
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully retrieved ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTicket_WithNonExistentTicket_LogsWarning()
+    {
+        var ticketId = Guid.NewGuid();
+        var result = Result<TicketDto>.Failure("Ticket not found");
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        await _controller.GetTicket(ticketId);
+
+        // Verify warning logging for ticket not found
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Ticket") && v.ToString()!.Contains("not found")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTicketsByPlayer_LogsInformation()
+    {
+        var playerId = Guid.NewGuid();
+        var tickets = new List<TicketSummaryDto>
+        {
+            new TicketSummaryDto
+            {
+                Id = Guid.NewGuid(),
+                Title = "Ticket 1",
+                Description = "Description 1",
+                Creator = new PlayerDto
+                {
+                    Id = playerId,
+                    Email = "player@example.com",
+                    Name = "Test Player",
+                    PlayerNumber = "P001"
+                },
+                CreatedDate = DateTime.UtcNow,
+                LastUpdateDate = DateTime.UtcNow,
+                MessageCount = 1
+            }
+        };
+
+        var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
+        _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
+                         .ReturnsAsync(result);
+
+        await _controller.GetTicketsByPlayer(playerId);
+
+        // Verify information logging for retrieval attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Retrieving tickets for player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful retrieval with count
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully retrieved") && v.ToString()!.Contains("tickets for player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUnresolvedTickets_LogsInformation()
+    {
+        var tickets = new List<TicketSummaryDto>
+        {
+            new TicketSummaryDto
+            {
+                Id = Guid.NewGuid(),
+                Title = "Open Ticket",
+                Description = "Open ticket description",
+                Creator = new PlayerDto
+                {
+                    Id = Guid.NewGuid(),
+                    Email = "player1@example.com",
+                    Name = "Player 1",
+                    PlayerNumber = "P001"
+                },
+                Status = "Open",
+                CreatedDate = DateTime.UtcNow,
+                LastUpdateDate = DateTime.UtcNow,
+                MessageCount = 1
+            }
+        };
+
+        var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
+        _mockTicketService.Setup(s => s.GetUnresolvedTicketsAsync())
+                         .ReturnsAsync(result);
+
+        await _controller.GetUnresolvedTickets();
+
+        // Verify information logging for retrieval attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Retrieving all unresolved tickets")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful retrieval with count
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully retrieved") && v.ToString()!.Contains("unresolved tickets")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AddReply_LogsInformation()
+    {
+        var ticketId = Guid.NewGuid();
+        var createReplyDto = new CreateReplyDto
+        {
+            Content = "This is a reply",
+            AuthorId = Guid.NewGuid(),
+            TicketId = ticketId
+        };
+
+        var replyDto = new ReplyDto
+        {
+            Id = Guid.NewGuid(),
+            Content = createReplyDto.Content,
+            Author = new AgentDto
+            {
+                Id = createReplyDto.AuthorId,
+                Email = "agent@example.com",
+                Name = "CS Agent"
+            },
+            CreatedDate = DateTime.UtcNow
+        };
+
+        var result = Result<ReplyDto>.Success(replyDto);
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
+                         .ReturnsAsync(result);
+
+        await _controller.AddReply(ticketId, createReplyDto);
+
+        // Verify information logging for reply addition attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Adding reply to ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful reply addition
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully added reply")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AddReply_WithInvalidTicket_LogsWarning()
+    {
+        var ticketId = Guid.NewGuid();
+        var createReplyDto = new CreateReplyDto
+        {
+            Content = "This is a reply",
+            AuthorId = Guid.NewGuid(),
+            TicketId = ticketId
+        };
+
+        var result = Result<ReplyDto>.Failure("Ticket not found");
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
+                         .ReturnsAsync(result);
+
+        await _controller.AddReply(ticketId, createReplyDto);
+
+        // Verify warning logging for ticket not found
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("not found when adding reply")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ResolveTicket_LogsInformation()
+    {
+        var ticketId = Guid.NewGuid();
+
+        var ticketDto = new TicketDto
+        {
+            Id = ticketId,
+            Title = "Test Ticket",
+            Description = "Test Description",
+            Creator = new PlayerDto
+            {
+                Id = Guid.NewGuid(),
+                Email = "player@example.com",
+                Name = "Test Player",
+                PlayerNumber = "P001"
+            },
+            Status = "Resolved",
+            CreatedDate = DateTime.UtcNow,
+            LastUpdateDate = DateTime.UtcNow,
+            ResolvedDate = DateTime.UtcNow
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        await _controller.ResolveTicket(ticketId);
+
+        // Verify information logging for resolution attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Resolving ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful resolution
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully resolved ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ResolveTicket_WithTicketNotInResolution_LogsWarning()
+    {
+        var ticketId = Guid.NewGuid();
+
+        var result = Result<TicketDto>.Failure("Can only resolve tickets that are in resolution status");
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        await _controller.ResolveTicket(ticketId);
+
+        // Verify warning logging for failed resolution
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to resolve ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetTicketsByPlayer_WithFailure_LogsWarning()
+    {
+        var playerId = Guid.NewGuid();
+        var result = Result<IEnumerable<TicketSummaryDto>>.Failure("Player not found");
+        _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicketsByPlayer(playerId);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Player not found", badRequestResult.Value);
+
+        // Verify warning logging for failed retrieval
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to retrieve tickets for player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUnresolvedTickets_WithFailure_LogsWarning()
+    {
+        var result = Result<IEnumerable<TicketSummaryDto>>.Failure("Database error");
+        _mockTicketService.Setup(s => s.GetUnresolvedTicketsAsync())
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetUnresolvedTickets();
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Database error", badRequestResult.Value);
+
+        // Verify warning logging for failed retrieval
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to retrieve unresolved tickets")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AddReply_WithGeneralFailure_LogsWarning()
+    {
+        var ticketId = Guid.NewGuid();
+        var createReplyDto = new CreateReplyDto
+        {
+            Content = "This is a reply",
+            AuthorId = Guid.NewGuid(),
+            TicketId = ticketId
+        };
+
+        var result = Result<ReplyDto>.Failure("Validation error");
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.AddReply(ticketId, createReplyDto);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Validation error", badRequestResult.Value);
+
+        // Verify warning logging for failed reply addition
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to add reply to ticket")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

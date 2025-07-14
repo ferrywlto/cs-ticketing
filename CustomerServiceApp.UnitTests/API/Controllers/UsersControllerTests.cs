@@ -1,7 +1,7 @@
 using CustomerServiceApp.API.Controllers;
 using CustomerServiceApp.Application.Common.DTOs;
-using CustomerServiceApp.Application.Common.Interfaces;
 using CustomerServiceApp.Application.Common.Models;
+using CustomerServiceApp.Application.Users;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -140,41 +140,210 @@ public class UsersControllerTests
     }
 
     [Fact]
-    public async Task Authenticate_WithValidCredentials_ReturnsOk()
+    public async Task CreatePlayer_LogsInformation()
     {
-        var email = "test@example.com";
-        var password = "password123";
-        var userDto = new PlayerDto
+        var createDto = new CreatePlayerDto
+        {
+            Email = "test@example.com",
+            Name = "Test Player",
+            Password = "password123",
+            PlayerNumber = "P001"
+        };
+
+        var playerDto = new PlayerDto
         {
             Id = Guid.NewGuid(),
-            Email = email,
+            Email = createDto.Email,
+            Name = createDto.Name,
+            PlayerNumber = createDto.PlayerNumber
+        };
+
+        var result = Result<PlayerDto>.Success(playerDto);
+        _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
+                       .ReturnsAsync(result);
+
+        await _controller.CreatePlayer(createDto);
+
+        // Verify information logging for player creation attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Creating new player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully created player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePlayer_WithFailure_LogsWarning()
+    {
+        var createDto = new CreatePlayerDto
+        {
+            Email = "test@example.com",
+            Name = "Test Player",
+            Password = "password123",
+            PlayerNumber = "P001"
+        };
+
+        var result = Result<PlayerDto>.Failure("Email already exists");
+        _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
+                       .ReturnsAsync(result);
+
+        await _controller.CreatePlayer(createDto);
+
+        // Verify warning logging for failed creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to create player")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAgent_LogsInformation()
+    {
+        var createDto = new CreateAgentDto
+        {
+            Email = "agent@example.com",
+            Name = "Test Agent",
+            Password = "password123"
+        };
+
+        var agentDto = new AgentDto
+        {
+            Id = Guid.NewGuid(),
+            Email = createDto.Email,
+            Name = createDto.Name
+        };
+
+        var result = Result<AgentDto>.Success(agentDto);
+        _mockUserService.Setup(s => s.CreateAgentAsync(createDto))
+                       .ReturnsAsync(result);
+
+        await _controller.CreateAgent(createDto);
+
+        // Verify information logging for agent creation attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Creating new agent")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully created agent")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAgent_WithFailure_LogsWarning()
+    {
+        var createDto = new CreateAgentDto
+        {
+            Email = "agent@example.com",
+            Name = "Test Agent",
+            Password = "password123"
+        };
+
+        var result = Result<AgentDto>.Failure("Email already exists");
+        _mockUserService.Setup(s => s.CreateAgentAsync(createDto))
+                       .ReturnsAsync(result);
+
+        var response = await _controller.CreateAgent(createDto);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Email already exists", badRequestResult.Value);
+
+        // Verify warning logging for failed creation
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to create agent")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task GetUser_LogsInformation()
+    {
+        var userId = Guid.NewGuid();
+        var userDto = new PlayerDto
+        {
+            Id = userId,
+            Email = "test@example.com",
             Name = "Test Player",
             PlayerNumber = "P001"
         };
 
         var result = Result<UserDto>.Success(userDto);
-        _mockUserService.Setup(s => s.AuthenticateAsync(email, password))
+        _mockUserService.Setup(s => s.GetUserByIdAsync(userId))
                        .ReturnsAsync(result);
 
-        var response = await _controller.Authenticate(email, password);
+        await _controller.GetUser(userId);
 
-        var okResult = Assert.IsType<OkObjectResult>(response.Result);
-        var returnedUser = Assert.IsType<PlayerDto>(okResult.Value);
-        Assert.Equal(userDto.Id, returnedUser.Id);
+        // Verify information logging for user retrieval attempt
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Retrieving user with ID")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+
+        // Verify information logging for successful retrieval
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Information,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully retrieved user")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 
     [Fact]
-    public async Task Authenticate_WithInvalidCredentials_ReturnsUnauthorized()
+    public async Task GetUser_WithNonExistentUser_LogsWarning()
     {
-        var email = "test@example.com";
-        var password = "wrongpassword";
-        var result = Result<UserDto>.Failure("Invalid credentials");
-        _mockUserService.Setup(s => s.AuthenticateAsync(email, password))
+        var userId = Guid.NewGuid();
+        var result = Result<UserDto>.Failure("User not found");
+        _mockUserService.Setup(s => s.GetUserByIdAsync(userId))
                        .ReturnsAsync(result);
 
-        var response = await _controller.Authenticate(email, password);
+        await _controller.GetUser(userId);
 
-        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response.Result);
-        Assert.Equal("Invalid credentials", unauthorizedResult.Value);
+        // Verify warning logging for user not found
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("User") && v.ToString()!.Contains("not found")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }
