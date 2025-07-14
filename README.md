@@ -145,7 +145,15 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.3.1 (Current)
+### Version 1.3.2 (Current)
+- **CustomerServiceApp.Infrastructure v1.1.2**: Fixed validation annotations for security options
+  - **FIXED**: Added missing validation attributes to `PasswordHasherOptions.Salt` property
+    - Added `[Required]` validation to ensure salt is not empty
+    - Added `[MinLength(32)]` validation for minimum salt security requirement
+    - Ensures consistent use of Microsoft validation framework across all options classes
+  - **Quality**: All 62 tests passing, Release build successful
+
+### Version 1.3.1
 - **CustomerServiceApp.Infrastructure v1.1.1**: Enhanced security with hardened password hashing
   - **SECURITY**: Upgraded `PasswordHasher` from basic SHA256 to PBKDF2 with salt
     - PBKDF2 with SHA-256 for cryptographically secure password hashing
