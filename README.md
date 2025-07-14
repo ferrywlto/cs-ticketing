@@ -38,7 +38,7 @@ TBD
     2. Customer Service Agent (Agent) - Who handle the customer support tickets.
     3. Ticket - Initiated by a player of what happened. 
     4. Reply - Initiated by either a player or an agent.
-- Each message contains:
+- Each Reply contains:
     - What - The message content
     - Who - A player / an agent
     - When - The time
@@ -70,6 +70,11 @@ TBD
     - One for agent
 - Ticket can be handled by any agent, no assignment required.
 - Assume user will refresh the page to load latest ticket status.
+- Player can only see their own tickets on the list.
+- Player can reply their tickets.
+- Agent can see all tickets from any player on the list.
+- Agent can reply to any ticket.  
+- Only Player can create new ticket.
 
 ## Technical Decisions
 - Using In-memory database due to keeping the project as simple as possible without external dependencies, this make sure user can run on their machine regardless of platform. As data persistency is not a mandatory in requirements.
