@@ -1,3 +1,4 @@
+using CustomerServiceApp.Application.Extensions;
 using CustomerServiceApp.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add application services
+builder.Services.AddApplication();
 
 // Add infrastructure services
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -10,7 +10,7 @@ namespace CustomerServiceApp.Application.Tickets;
 /// <summary>
 /// Ticket service with exception handling and Result pattern
 /// </summary>
-public class TicketService
+public class TicketService : ITicketService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
@@ -122,6 +122,29 @@ public class TicketService
         catch (Exception ex)
         {
             return Result<IEnumerable<TicketSummaryDto>>.Failure($"Failed to get tickets by status: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Gets all unresolved tickets (Open and InResolution) for agents
+    /// </summary>
+    public async Task<Result<IEnumerable<TicketSummaryDto>>> GetUnresolvedTicketsAsync()
+    {
+        try
+        {
+            var openTickets = await _unitOfWork.Tickets.GetByStatusAsync(TicketStatus.Open);
+            var inResolutionTickets = await _unitOfWork.Tickets.GetByStatusAsync(TicketStatus.InResolution);
+            
+            var allUnresolvedTickets = openTickets.Concat(inResolutionTickets)
+                                                 .OrderByDescending(t => t.LastUpdateDate);
+            
+            var summaries = allUnresolvedTickets.Select(t => _mapper.MapToSummaryDto(t));
+
+            return Result<IEnumerable<TicketSummaryDto>>.Success(summaries);
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<TicketSummaryDto>>.Failure($"Failed to get unresolved tickets: {ex.Message}");
         }
     }
 

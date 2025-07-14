@@ -9,7 +9,7 @@ namespace CustomerServiceApp.Application.Users;
 /// <summary>
 /// User service with exception handling and Result pattern
 /// </summary>
-public class UserService
+public class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
