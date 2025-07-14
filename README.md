@@ -94,6 +94,38 @@ TBD
 - We will use Redux style dispatch and mutate pattern for frontend state management.
 - We will use CDN Bootstrap styles for frontend UI styles for simplicity.
 
+## Security Configuration
+
+### Password Hashing
+The system uses PBKDF2 with salted hashing for secure password storage:
+
+1. **Development Setup**: Passwords are hashed using user secrets
+   ```bash
+   # Set the salt (minimum 32 characters)
+   dotnet user-secrets set "PasswordHasher:Salt" "your-secure-salt-here" --project CustomerServiceApp.API
+   
+   # Set iterations (default: 100,000)
+   dotnet user-secrets set "PasswordHasher:Iterations" "100000" --project CustomerServiceApp.API
+   ```
+
+2. **Production Setup**: Configure via environment variables or secure configuration, this is a simplified approach for this project. In real world application this should comes from AWS / GCP SecretManager or Azure KeyVault.
+
+   ```json
+   {
+     "PasswordHasher": {
+       "Salt": "REPLACE_WITH_SECURE_SALT_IN_PRODUCTION",
+       "Iterations": 100000
+     }
+   }
+   ```
+
+**Security Features:**
+- PBKDF2 with SHA-256 for password hashing
+- Configurable salt for additional security
+- Configurable iterations for performance/security balance
+- User secrets integration for development
+- No plaintext passwords stored in configuration
+
 ## Possible enhancements
 - Use better authentication mechanism like OAuth and MFA.
 - Use real database for persistent data storage.
@@ -102,13 +134,38 @@ TBD
 - Separate APIs by concern into individual deployable units.
 - CI/CD pipeline with test automation
 - Cloud deployment
-- Caching mechanism for to improve frequent reading tickets loading time.  
+- Caching mechanism to improve frequent reading tickets loading time.  
 - Using Signalr for ticket update notifications.
 - Paging mechanism for loading tickets and messages in a ticket thread.
 
 ## Change Log
 
-### Version 1.3.0 (Current)
+### Version 1.3.1 (Current)
+- **CustomerServiceApp.Infrastructure v1.1.1**: Enhanced security with hardened password hashing
+  - **SECURITY**: Upgraded `PasswordHasher` from basic SHA256 to PBKDF2 with salt
+    - PBKDF2 with SHA-256 for cryptographically secure password hashing
+    - Configurable salt via user secrets or environment variables
+    - Configurable iterations (default: 100,000) for performance/security balance
+    - User secrets integration for secure development configuration
+    - Production-ready configuration options with environment variables
+  - **NEW**: `PasswordHasherOptions` configuration class with validation
+    - Minimum 32-character salt requirement with validation attributes
+    - Configurable iteration count with range validation
+    - Microsoft Extensions Options pattern integration
+  - **Enhancement**: Updated database seeding to use secure password hashing
+    - All seeded users now use properly hashed passwords via PBKDF2
+    - Development passwords clearly marked and documented
+  - **Testing**: 11 comprehensive unit tests for `PasswordHasher` with 100% coverage
+    - Tests for consistent hashing, password verification, and edge cases
+    - Support for various password types including Unicode characters
+    - Security validation for incorrect passwords and empty inputs
+
+- **CustomerServiceApp.API v1.1.0**: Security configuration enhancements
+  - **NEW**: User secrets support for secure development configuration
+  - **NEW**: Password hasher configuration in appsettings with production guidance
+  - **Security**: Proper separation of development and production configuration
+
+### Version 1.3.0
 - **CustomerServiceApp.Infrastructure v1.1.0**: Complete infrastructure layer implementation with Entity Framework Core
   - **NEW**: `CustomerServiceDbContext` with Entity Framework Core 8.0.0 configuration
     - Table Per Hierarchy (TPH) inheritance mapping for User/Player/Agent entities
@@ -123,9 +180,6 @@ TBD
     - Lazy-loaded repository instances for optimal performance
     - Centralized SaveChanges coordination across multiple repositories
     - Proper disposal pattern implementation
-  - **NEW**: `PasswordHasher` service using SHA256 for demo authentication
-    - Simple hash generation and verification for development purposes
-    - Placeholder for more secure authentication mechanisms in production
   - **NEW**: `Mapper` service for comprehensive domain-DTO transformations
     - Complete mapping between domain entities and application DTOs
     - Null-safe conversion methods with proper validation

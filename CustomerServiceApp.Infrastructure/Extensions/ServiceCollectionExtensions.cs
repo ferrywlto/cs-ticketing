@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using CustomerServiceApp.Application.Common.Interfaces;
 using CustomerServiceApp.Application.Users;
 using CustomerServiceApp.Application.Tickets;
 using CustomerServiceApp.Infrastructure.Data;
+using CustomerServiceApp.Infrastructure.Options;
 using CustomerServiceApp.Infrastructure.Repositories;
 using CustomerServiceApp.Infrastructure.Services;
 
@@ -17,8 +19,11 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Adds infrastructure services to the dependency injection container
     /// </summary>
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
+        // Configure password hasher options from configuration
+        services.Configure<PasswordHasherOptions>(configuration.GetSection(PasswordHasherOptions.SectionName));
+
         // Add DbContext with In-Memory database
         services.AddDbContext<CustomerServiceDbContext>(options =>
             options.UseInMemoryDatabase("CustomerServiceDb"));
@@ -46,6 +51,7 @@ public static class ServiceCollectionExtensions
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CustomerServiceDbContext>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
         
         // Ensure database is created
         await context.Database.EnsureCreatedAsync();
@@ -53,11 +59,11 @@ public static class ServiceCollectionExtensions
         // Seed initial data if needed
         if (seedData)
         {
-            await SeedDataAsync(context);
+            await SeedDataAsync(context, passwordHasher);
         }
     }
 
-    private static async Task SeedDataAsync(CustomerServiceDbContext context)
+    private static async Task SeedDataAsync(CustomerServiceDbContext context, IPasswordHasher passwordHasher)
     {
         // Check if data already exists
         if (context.Users.Any())
@@ -68,7 +74,7 @@ public static class ServiceCollectionExtensions
         {
             Email = "player1@example.com",
             Name = "John Doe",
-            PasswordHash = "hashed_password_123", // In production, properly hash this
+            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
             PlayerNumber = "P001"
         };
 
@@ -76,8 +82,16 @@ public static class ServiceCollectionExtensions
         {
             Email = "player2@example.com",
             Name = "Jane Smith",
-            PasswordHash = "hashed_password_456",
+            PasswordHash = passwordHasher.HashPassword("password456"), // Development password
             PlayerNumber = "P002"
+        };
+
+        var player3 = new CustomerServiceApp.Domain.Users.Player
+        {
+            Email = "player3@example.com",
+            Name = "Bob Johnson",
+            PasswordHash = passwordHasher.HashPassword("password789"), // Development password
+            PlayerNumber = "P003"
         };
 
         // Create sample agent
@@ -85,10 +99,10 @@ public static class ServiceCollectionExtensions
         {
             Email = "agent1@example.com",
             Name = "Agent Anderson",
-            PasswordHash = "hashed_password_789"
+            PasswordHash = passwordHasher.HashPassword("agentpass123") // Development password
         };
 
-        context.Users.AddRange(player1, player2, agent1);
+        context.Users.AddRange(player1, player2, player3, agent1);
         await context.SaveChangesAsync();
 
         // Create sample tickets
