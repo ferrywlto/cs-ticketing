@@ -107,7 +107,39 @@ TBD
 
 ## Change Log
 
-### Version 1.2.0 (Current)
+### Version 1.3.0 (Current)
+- **CustomerServiceApp.Infrastructure v1.1.0**: Complete infrastructure layer implementation with Entity Framework Core
+  - **NEW**: `CustomerServiceDbContext` with Entity Framework Core 8.0.0 configuration
+    - Table Per Hierarchy (TPH) inheritance mapping for User/Player/Agent entities
+    - Comprehensive entity configuration with relationships and constraints
+    - Unique indexes for Email fields and PlayerNumber validation
+    - Proper navigation properties with cascading delete policies
+  - **NEW**: `UserRepository` and `TicketRepository` implementing application layer interfaces
+    - Full async CRUD operations with proper Include statements for eager loading
+    - Efficient database queries with navigation property loading
+    - Repository pattern implementation following clean architecture principles
+  - **NEW**: `UnitOfWork` pattern for transaction management and repository coordination
+    - Lazy-loaded repository instances for optimal performance
+    - Centralized SaveChanges coordination across multiple repositories
+    - Proper disposal pattern implementation
+  - **NEW**: `PasswordHasher` service using SHA256 for demo authentication
+    - Simple hash generation and verification for development purposes
+    - Placeholder for more secure authentication mechanisms in production
+  - **NEW**: `Mapper` service for comprehensive domain-DTO transformations
+    - Complete mapping between domain entities and application DTOs
+    - Null-safe conversion methods with proper validation
+    - Support for all entity types (User, Player, Agent, Ticket, Reply)
+  - **NEW**: `ServiceCollectionExtensions` with complete dependency injection configuration
+    - Registration of all infrastructure services and repositories
+    - Database context configuration with in-memory provider
+    - Automatic database initialization and sample data seeding
+    - Sample users (3 players, 1 agent) and tickets for development testing
+  - **Feature**: Microsoft Entity Framework Core 8.0.0 with InMemory provider
+  - **Feature**: Table Per Hierarchy inheritance strategy for optimal performance
+  - **Feature**: Comprehensive database seeding with realistic test data
+  - **Quality**: Zero compilation errors, all 16 tests passing with 100% domain coverage
+
+### Version 1.2.0
 - **CustomerServiceApp.Domain v1.2.0**: Complete domain model implementation with modern C# patterns and comprehensive business logic
   - **NEW**: `User` abstract base class with email validation and common properties using modern data annotations
   - **NEW**: `Player` entity extending User with PlayerNumber validation and PasswordHash field
