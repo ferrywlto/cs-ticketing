@@ -1,5 +1,4 @@
 using CustomerServiceApp.Application.Common.DTOs;
-using CustomerServiceApp.Application.Common.Exceptions;
 using CustomerServiceApp.Application.Common.Interfaces;
 using CustomerServiceApp.Application.Common.Models;
 using CustomerServiceApp.Domain.Users;

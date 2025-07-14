@@ -5,7 +5,6 @@ using CustomerServiceApp.Application.Common.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Xunit;
 
 namespace CustomerServiceApp.UnitTests.API.Controllers;
 

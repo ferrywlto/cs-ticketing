@@ -1,7 +1,6 @@
 using CustomerServiceApp.Infrastructure.Options;
 using CustomerServiceApp.Infrastructure.Services;
 using Microsoft.Extensions.Options;
-using Xunit;
 
 namespace CustomerServiceApp.UnitTests.Infrastructure.Services;
 

@@ -1,6 +1,5 @@
 using CustomerServiceApp.Domain.Tickets;
 using CustomerServiceApp.Domain.Users;
-using Xunit;
 
 namespace CustomerServiceApp.UnitTests.Domain.Tickets;
 

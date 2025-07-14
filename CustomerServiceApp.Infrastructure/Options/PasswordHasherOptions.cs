@@ -12,7 +12,9 @@ public class PasswordHasherOptions
     /// <summary>
     /// Salt value used for password hashing. Should be stored securely in user secrets.
     /// </summary>
-    public string Salt { get; init; } = string.Empty;
+    [Required(ErrorMessage = "Password hasher salt is required.")]
+    [MinLength(32, ErrorMessage = "Salt must be at least 32 characters for security.")]
+    public required string Salt { get; init; }
 
     /// <summary>
     /// Number of iterations for PBKDF2 (default: 100,000)

@@ -4,7 +4,6 @@ using CustomerServiceApp.Infrastructure.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Xunit;
 
 namespace CustomerServiceApp.UnitTests.Infrastructure.Configuration;
 

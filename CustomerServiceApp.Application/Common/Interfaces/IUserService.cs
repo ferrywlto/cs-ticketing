@@ -21,7 +21,7 @@ public interface IUserService
     /// <summary>
     /// Authenticates a user with email and password
     /// </summary>
-    Task<Result<UserDto>> AuthenticateAsync(string email, string passwordHash);
+    Task<Result<UserDto>> AuthenticateAsync(string email, string password);
 
     /// <summary>
     /// Gets a user by ID
