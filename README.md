@@ -38,7 +38,7 @@ TBD
     2. Customer Service Agent (Agent) - Who handle the customer support tickets.
     3. Ticket - Initiated by a player of what happened. 
     4. Reply - Initiated by either a player or an agent.
-- Each message contains:
+- Each Reply contains:
     - What - The message content
     - Who - A player / an agent
     - When - The time
@@ -70,6 +70,11 @@ TBD
     - One for agent
 - Ticket can be handled by any agent, no assignment required.
 - Assume user will refresh the page to load latest ticket status.
+- Player can only see their own tickets on the list.
+- Player can reply their tickets.
+- Agent can see all tickets from any player on the list.
+- Agent can reply to any ticket.  
+- Only Player can create new ticket.
 
 ## Technical Decisions
 - Using In-memory database due to keeping the project as simple as possible without external dependencies, this make sure user can run on their machine regardless of platform. As data persistency is not a mandatory in requirements.
@@ -140,7 +145,15 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.3.1 (Current)
+### Version 1.3.2 (Current)
+- **CustomerServiceApp.Infrastructure v1.1.2**: Fixed validation annotations for security options
+  - **FIXED**: Added missing validation attributes to `PasswordHasherOptions.Salt` property
+    - Added `[Required]` validation to ensure salt is not empty
+    - Added `[MinLength(32)]` validation for minimum salt security requirement
+    - Ensures consistent use of Microsoft validation framework across all options classes
+  - **Quality**: All 62 tests passing, Release build successful
+
+### Version 1.3.1
 - **CustomerServiceApp.Infrastructure v1.1.1**: Enhanced security with hardened password hashing
   - **SECURITY**: Upgraded `PasswordHasher` from basic SHA256 to PBKDF2 with salt
     - PBKDF2 with SHA-256 for cryptographically secure password hashing

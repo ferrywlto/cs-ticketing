@@ -1,5 +1,4 @@
 using CustomerServiceApp.Domain.Users;
-using Xunit;
 
 namespace CustomerServiceApp.UnitTests.Domain.Users;
 

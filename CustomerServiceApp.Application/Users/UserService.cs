@@ -1,5 +1,4 @@
 using CustomerServiceApp.Application.Common.DTOs;
-using CustomerServiceApp.Application.Common.Exceptions;
 using CustomerServiceApp.Application.Common.Interfaces;
 using CustomerServiceApp.Application.Common.Models;
 using CustomerServiceApp.Domain.Users;
@@ -9,7 +8,7 @@ namespace CustomerServiceApp.Application.Users;
 /// <summary>
 /// User service with exception handling and Result pattern
 /// </summary>
-public class UserService
+public class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;

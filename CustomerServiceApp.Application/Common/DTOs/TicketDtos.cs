@@ -92,9 +92,4 @@ public class UpdateTicketDto
     /// The ticket's status
     /// </summary>
     public TicketStatus? Status { get; set; }
-
-    /// <summary>
-    /// The ID of the user assigned to this ticket
-    /// </summary>
-    public Guid? AssignedToId { get; set; }
 }

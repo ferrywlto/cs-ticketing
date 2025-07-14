@@ -12,8 +12,8 @@ public class PasswordHasherOptions
     /// <summary>
     /// Salt value used for password hashing. Should be stored securely in user secrets.
     /// </summary>
-    [Required(ErrorMessage = "Salt is required for secure password hashing.")]
-    [MinLength(32, ErrorMessage = "Salt must be at least 32 characters long.")]
+    [Required(ErrorMessage = "Password hasher salt is required.")]
+    [MinLength(32, ErrorMessage = "Salt must be at least 32 characters for security.")]
     public required string Salt { get; init; }
 
     /// <summary>

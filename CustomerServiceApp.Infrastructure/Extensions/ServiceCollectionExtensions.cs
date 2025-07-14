@@ -21,8 +21,33 @@ public static class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Configure password hasher options from configuration
-        services.Configure<PasswordHasherOptions>(configuration.GetSection(PasswordHasherOptions.SectionName));
+        // Configure password hasher options from configuration with validation
+        services.Configure<PasswordHasherOptions>(passwordHasherOptions =>
+        {
+            var section = configuration.GetSection(PasswordHasherOptions.SectionName);
+            section.Bind(passwordHasherOptions);
+
+            // Validate that required configuration is present
+            if (string.IsNullOrWhiteSpace(passwordHasherOptions.Salt))
+            {
+                throw new InvalidOperationException(
+                    "PasswordHasher:Salt is required. " +
+                    "For development, set it using: dotnet user-secrets set \"PasswordHasher:Salt\" \"your-secure-salt-here\" " +
+                    "For production, set it via environment variables or appsettings.json");
+            }
+
+            if (passwordHasherOptions.Salt.Length < 32)
+            {
+                throw new InvalidOperationException(
+                    "PasswordHasher:Salt must be at least 32 characters long for security.");
+            }
+
+            if (passwordHasherOptions.Iterations < 10000 || passwordHasherOptions.Iterations > 1000000)
+            {
+                throw new InvalidOperationException(
+                    "PasswordHasher:Iterations must be between 10,000 and 1,000,000.");
+            }
+        });
 
         // Add DbContext with In-Memory database
         services.AddDbContext<CustomerServiceDbContext>(options =>

@@ -20,13 +20,20 @@ public class Ticket
 
     public TicketStatus Status { get; private set; } = TicketStatus.Open;
 
-    public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+    public DateTime CreatedDate { get; init; } 
 
-    public DateTime LastUpdateDate { get; private set; } = DateTime.UtcNow;
+    public DateTime LastUpdateDate { get; private set; }
 
     public DateTime? ResolvedDate { get; private set; }
 
     public IReadOnlyList<Reply> Messages => _messages.OrderBy(m => m.CreatedDate).ToList();
+
+    public Ticket()
+    {
+        var now = DateTime.UtcNow;
+        CreatedDate = now;
+        LastUpdateDate = now;
+    }
 
     public void AddReply(Reply reply)
     {
