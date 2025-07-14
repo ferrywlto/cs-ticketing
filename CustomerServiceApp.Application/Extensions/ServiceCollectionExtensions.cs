@@ -1,4 +1,4 @@
-using CustomerServiceApp.Application.Common.Interfaces;
+using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Tickets;
 using CustomerServiceApp.Application.Users;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +18,7 @@ public static class ServiceCollectionExtensions
         // Register application services
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITicketService, TicketService>();
+        services.AddScoped<IAuthenticationService, AuthenticationService>();
 
         return services;
     }

@@ -49,6 +49,44 @@ public static class ServiceCollectionExtensions
             }
         });
 
+        // Configure JWT token options from configuration with validation
+        services.Configure<JwtTokenOptions>(jwtTokenOptions =>
+        {
+            var section = configuration.GetSection("JWT");
+            section.Bind(jwtTokenOptions);
+
+            // Validate that required configuration is present
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.SecretKey))
+            {
+                throw new InvalidOperationException(
+                    "JWT:SecretKey is required. " +
+                    "For development, set it using: dotnet user-secrets set \"JWT:SecretKey\" \"your-secure-secret-key-here\" " +
+                    "For production, set it via environment variables or appsettings.json");
+            }
+
+            if (jwtTokenOptions.SecretKey.Length < 32)
+            {
+                throw new InvalidOperationException(
+                    "JWT:SecretKey must be at least 32 characters long for security.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.Issuer))
+            {
+                throw new InvalidOperationException("JWT:Issuer is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.Audience))
+            {
+                throw new InvalidOperationException("JWT:Audience is required.");
+            }
+
+            if (jwtTokenOptions.ExpiryMinutes <= 0 || jwtTokenOptions.ExpiryMinutes > 1440) // max 24 hours
+            {
+                throw new InvalidOperationException(
+                    "JWT:ExpiryMinutes must be between 1 and 1440 minutes (24 hours).");
+            }
+        });
+
         // Add DbContext with In-Memory database
         services.AddDbContext<CustomerServiceDbContext>(options =>
             options.UseInMemoryDatabase("CustomerServiceDb"));
@@ -65,6 +103,7 @@ public static class ServiceCollectionExtensions
         // Register infrastructure services
         services.AddScoped<IMapper, Mapper>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
     }

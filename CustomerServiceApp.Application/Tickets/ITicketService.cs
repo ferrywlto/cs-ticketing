@@ -2,7 +2,7 @@ using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Application.Common.Models;
 using CustomerServiceApp.Domain.Tickets;
 
-namespace CustomerServiceApp.Application.Common.Interfaces;
+namespace CustomerServiceApp.Application.Tickets;
 
 /// <summary>
 /// Interface for ticket service operations
