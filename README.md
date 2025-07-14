@@ -76,6 +76,7 @@ TBD
 - Using Entity Framework is not mandatory, as a clear data access layer should abstract the infrastructure and underlying implementation details. The same data access API should work with different storage provider interfaces.
 - Basic username and password are used as authentication mechanism as the project is not aim for secure production use, in real world we should use more secure approach like OAuth + MFA. 
 - Due to the same reason the agent or user account management is not included in this project.
+- The Mapper classes was created to make our methods idempotent. We are not using AutoMapper in this project to keep the dependencies to minimum for simplicity, ensuring smooth `dotnet restore` process for code user.
 
 ## Design
 - We will use .NET Aspire to orchestrate the following projects:
