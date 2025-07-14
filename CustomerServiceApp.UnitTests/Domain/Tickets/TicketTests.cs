@@ -75,6 +75,11 @@ public class TicketTests
             Creator = _testPlayer
         };
 
+        var originalLastUpdateDate = ticket.LastUpdateDate;
+        
+        // Add a small delay to ensure different timestamps
+        Thread.Sleep(1);
+
         var reply = new Reply
         {
             Content = "This is a test reply",
@@ -85,7 +90,7 @@ public class TicketTests
 
         Assert.Single(ticket.Messages);
         Assert.Equal(reply, ticket.Messages.First());
-        Assert.True(ticket.LastUpdateDate > ticket.CreatedDate);
+        Assert.True(ticket.LastUpdateDate > originalLastUpdateDate);
     }
 
     [Fact]
