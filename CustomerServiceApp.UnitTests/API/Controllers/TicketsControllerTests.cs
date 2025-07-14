@@ -24,7 +24,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task CreateTicket_WithValidDto_ReturnsCreatedResult()
     {
-        // Arrange
         var createDto = new CreateTicketDto
         {
             Title = "Test Ticket",
@@ -54,10 +53,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.CreateTicket(createDto);
 
-        // Assert
         var createdResult = Assert.IsType<CreatedAtActionResult>(response.Result);
         var returnedTicket = Assert.IsType<TicketDto>(createdResult.Value);
         Assert.Equal(ticketDto.Id, returnedTicket.Id);
@@ -67,7 +64,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task CreateTicket_WithFailure_ReturnsBadRequest()
     {
-        // Arrange
         var createDto = new CreateTicketDto
         {
             Title = "Test Ticket",
@@ -79,10 +75,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.CreateTicket(createDto);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
         Assert.Equal("Creator not found", badRequestResult.Value);
     }
@@ -90,7 +84,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task GetTicket_WithExistingTicket_ReturnsOk()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
         var creatorDto = new PlayerDto
         {
@@ -114,10 +107,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.GetTicket(ticketId);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
         var returnedTicket = Assert.IsType<TicketDto>(okResult.Value);
         Assert.Equal(ticketId, returnedTicket.Id);
@@ -126,16 +117,13 @@ public class TicketsControllerTests
     [Fact]
     public async Task GetTicket_WithNonExistentTicket_ReturnsNotFound()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
         var result = Result<TicketDto>.Failure("Ticket not found");
         _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.GetTicket(ticketId);
 
-        // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(response.Result);
         Assert.Equal("Ticket not found", notFoundResult.Value);
     }
@@ -143,7 +131,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task GetTicketsByPlayer_WithExistingPlayer_ReturnsOk()
     {
-        // Arrange
         var playerId = Guid.NewGuid();
         var tickets = new List<TicketSummaryDto>
         {
@@ -169,10 +156,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.GetTicketsByPlayer(playerId);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
         var returnedTickets = Assert.IsType<List<TicketSummaryDto>>(okResult.Value);
         Assert.Single(returnedTickets);
@@ -181,7 +166,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task GetUnresolvedTickets_ForAgents_ReturnsOk()
     {
-        // Arrange
         var tickets = new List<TicketSummaryDto>
         {
             new TicketSummaryDto
@@ -224,10 +208,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.GetUnresolvedTicketsAsync())
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.GetUnresolvedTickets();
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
         var returnedTickets = Assert.IsType<List<TicketSummaryDto>>(okResult.Value);
         Assert.Equal(2, returnedTickets.Count);
@@ -238,7 +220,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task ResolveTicket_WithValidTicket_ReturnsOk()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
 
         var ticketDto = new TicketDto
@@ -263,10 +244,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.ResolveTicket(ticketId);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
         var returnedTicket = Assert.IsType<TicketDto>(okResult.Value);
         Assert.Equal(ticketId, returnedTicket.Id);
@@ -276,17 +255,14 @@ public class TicketsControllerTests
     [Fact]
     public async Task ResolveTicket_WithTicketNotInResolution_ReturnsBadRequest()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
 
         var result = Result<TicketDto>.Failure("Can only resolve tickets that are in resolution status");
         _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.ResolveTicket(ticketId);
 
-        // Assert
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
         Assert.Equal("Can only resolve tickets that are in resolution status", badRequestResult.Value);
     }
@@ -294,7 +270,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task AddReply_WithValidData_ReturnsOk()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
         var createReplyDto = new CreateReplyDto
         {
@@ -320,10 +295,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.AddReply(ticketId, createReplyDto);
 
-        // Assert
         var okResult = Assert.IsType<OkObjectResult>(response.Result);
         var returnedReply = Assert.IsType<ReplyDto>(okResult.Value);
         Assert.Equal(replyDto.Id, returnedReply.Id);
@@ -333,7 +306,6 @@ public class TicketsControllerTests
     [Fact]
     public async Task AddReply_WithInvalidTicket_ReturnsNotFound()
     {
-        // Arrange
         var ticketId = Guid.NewGuid();
         var createReplyDto = new CreateReplyDto
         {
@@ -346,10 +318,8 @@ public class TicketsControllerTests
         _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
                          .ReturnsAsync(result);
 
-        // Act
         var response = await _controller.AddReply(ticketId, createReplyDto);
 
-        // Assert
         var notFoundResult = Assert.IsType<NotFoundObjectResult>(response.Result);
         Assert.Equal("Ticket not found", notFoundResult.Value);
     }
