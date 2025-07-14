@@ -42,7 +42,7 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Ensures the database is created and seeded with initial data
     /// </summary>
-    public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider)
+    public static async Task InitializeDatabaseAsync(this IServiceProvider serviceProvider, bool seedData = false)
     {
         using var scope = serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<CustomerServiceDbContext>();
@@ -51,7 +51,10 @@ public static class ServiceCollectionExtensions
         await context.Database.EnsureCreatedAsync();
         
         // Seed initial data if needed
-        await SeedDataAsync(context);
+        if (seedData)
+        {
+            await SeedDataAsync(context);
+        }
     }
 
     private static async Task SeedDataAsync(CustomerServiceDbContext context)
