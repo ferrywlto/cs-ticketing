@@ -1,36 +1,141 @@
 ﻿@page "/"
+@layout HomeLayout
+@inject AppStateStore AppState
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>Customer Support Ticketing System</PageTitle>
 
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-12">
-            <div class="jumbotron bg-primary text-white p-5 rounded">
-                <h1 class="display-4">Customer Support Ticketing System</h1>
-                <p class="lead">Welcome to our customer support portal. Please sign in to view and manage your support tickets.</p>
+<div class="container-fluid vh-100 d-flex align-items-center">
+    <div class="container">
+        <!-- Header Section -->
+        <div class="row justify-content-center mb-5">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-3 fw-bold text-primary mb-4">
+                    <i class="bi bi-headset me-3"></i>
+                    Customer Support Portal
+                </h1>
+                <p class="lead text-muted">
+                    Welcome to our comprehensive customer support system. 
+                    Choose your portal below to get started with ticketing and support services.
+                </p>
             </div>
         </div>
-    </div>
-    
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Customer Portal</h5>
-                    <p class="card-text">Sign in to create new tickets, view your ticket history, and track the status of your support requests.</p>
-                    <a href="/player/login" class="btn btn-primary">Customer Sign In</a>
+        
+        <!-- Portal Selection Cards -->
+        <div class="row justify-content-center g-4">
+            <div class="col-md-5">
+                <div class="card border-0 shadow-lg h-100 hover-card">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title text-primary mb-3">Customer Portal</h3>
+                        <p class="card-text text-muted mb-4">
+                            Create support tickets, track your requests, and get help with your account.
+                            View your ticket history and communicate with our support team.
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="/player/login" class="btn btn-primary btn-lg rounded-pill">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                Customer Sign In
+                            </a>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Demo: player1@example.com | password123
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-5">
+                <div class="card border-0 shadow-lg h-100 hover-card">
+                    <div class="card-body text-center p-5">
+                        <div class="mb-4">
+                            <i class="bi bi-shield-check text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h3 class="card-title text-success mb-3">Agent Portal</h3>
+                        <p class="card-text text-muted mb-4">
+                            Manage customer tickets, provide support responses, and resolve customer issues.
+                            Access the complete ticketing system dashboard.
+                        </p>
+                        <div class="d-grid gap-2">
+                            <a href="/agent/login" class="btn btn-success btn-lg rounded-pill">
+                                <i class="bi bi-shield-check me-2"></i>
+                                Agent Sign In
+                            </a>
+                        </div>
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                Demo: agent@customerservice.com | password123
+                            </small>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Agent Portal</h5>
-                    <p class="card-text">Support agents can sign in to view and respond to customer tickets, manage ticket status, and provide assistance.</p>
-                    <a href="/agent/login" class="btn btn-success">Agent Sign In</a>
+        <!-- System Status Indicator -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-6 text-center">
+                <div class="alert alert-success border-0 shadow-sm" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <strong>System Status:</strong> All services operational
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Custom CSS for hover effects -->
+<style>
+    .hover-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+    }
+    
+    .btn-lg {
+        padding: 12px 32px;
+        font-weight: 600;
+    }
+    
+    .card-body i {
+        transition: transform 0.2s ease-in-out;
+    }
+    
+    .hover-card:hover i {
+        transform: scale(1.1);
+    }
+</style>
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.StateChanged += StateHasChanged;
+        
+        // Check if already authenticated and redirect to appropriate dashboard
+        var state = AppState.GetState();
+        if (state.IsAuthenticated)
+        {
+            if (state.IsPlayer)
+            {
+                Navigation.NavigateTo("/player/tickets", replace: true);
+            }
+            else if (state.IsAgent)
+            {
+                Navigation.NavigateTo("/agent/tickets", replace: true);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.StateChanged -= StateHasChanged;
+    }
+}
