@@ -87,12 +87,13 @@ public class AppStateStore
     /// Dispatches loading state change
     /// </summary>
     /// <param name="isLoading">Loading state</param>
-    public void DispatchLoadingState(bool isLoading)
+    public async Task DispatchLoadingStateAsync(bool isLoading)
     {
         lock (_lock)
         {
             _state = _state with { IsLoading = isLoading };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -100,7 +101,7 @@ public class AppStateStore
     /// Dispatches error action
     /// </summary>
     /// <param name="error">Error message</param>
-    public void DispatchError(string error)
+    public async Task DispatchErrorAsync(string error)
     {
         lock (_lock)
         {
@@ -111,6 +112,7 @@ public class AppStateStore
                 IsLoading = false
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -118,7 +120,7 @@ public class AppStateStore
     /// Dispatches success message action
     /// </summary>
     /// <param name="message">Success message</param>
-    public void DispatchSuccessMessage(string message)
+    public async Task DispatchSuccessMessageAsync(string message)
     {
         lock (_lock)
         {
@@ -128,6 +130,7 @@ public class AppStateStore
                 Error = null
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -339,5 +342,35 @@ public class AppStateStore
     public void DispatchLogout()
     {
         _ = DispatchLogoutAsync(); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches loading state change (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="isLoading">Loading state</param>
+    [Obsolete("Use DispatchLoadingStateAsync for better async handling")]
+    public void DispatchLoadingState(bool isLoading)
+    {
+        _ = DispatchLoadingStateAsync(isLoading); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches error action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="error">Error message</param>
+    [Obsolete("Use DispatchErrorAsync for better async handling")]
+    public void DispatchError(string error)
+    {
+        _ = DispatchErrorAsync(error); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches success message action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="message">Success message</param>
+    [Obsolete("Use DispatchSuccessMessageAsync for better async handling")]
+    public void DispatchSuccessMessage(string message)
+    {
+        _ = DispatchSuccessMessageAsync(message); // Fire and forget for backward compatibility
     }
 }

@@ -87,7 +87,7 @@
 
         try
         {
-            AppState.DispatchLoadingState(true);
+            await AppState.DispatchLoadingStateAsync(true);
             
             var result = await ApiService.PlayerLoginAsync(loginModel.ToDto());
             
@@ -97,7 +97,7 @@
                 if (result.User is not PlayerDto)
                 {
                     errorMessage = "Invalid credentials or account type. Please use the correct login page.";
-                    AppState.DispatchError(errorMessage);
+                    await AppState.DispatchErrorAsync(errorMessage);
                     return;
                 }
 
@@ -110,18 +110,18 @@
             else
             {
                 errorMessage = "Invalid email or password. Please try again.";
-                AppState.DispatchError(errorMessage);
+                await AppState.DispatchErrorAsync(errorMessage);
             }
         }
         catch (Exception)
         {
             errorMessage = "An error occurred during login. Please try again.";
-            AppState.DispatchError(errorMessage);
+            await AppState.DispatchErrorAsync(errorMessage);
         }
         finally
         {
             isLoading = false;
-            AppState.DispatchLoadingState(false);
+            await AppState.DispatchLoadingStateAsync(false);
             StateHasChanged();
         }
     }
