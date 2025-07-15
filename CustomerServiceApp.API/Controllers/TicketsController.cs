@@ -23,20 +23,36 @@ public class TicketsController : ControllerBase
     [RequirePlayer]
     public async Task<ActionResult<TicketDto>> CreateTicket(CreateTicketDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        // Extract player ID from JWT token claims
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var playerId))
+        {
+            _logger.LogWarning("Failed to extract player ID from token for ticket creation");
+            return BadRequest("Invalid player authentication");
+        }
+
+        // Create a new DTO with the authenticated player ID
+        var authenticatedDto = new CreateTicketDto(dto.Title, dto.Description, playerId);
+        
         _logger.LogInformation("Creating new ticket with title: {Title} for player: {CreatorId}", 
-            dto.Title, dto.CreatorId);
+            authenticatedDto.Title, authenticatedDto.CreatorId);
             
-        var result = await _ticketService.CreateTicketAsync(dto);
+        var result = await _ticketService.CreateTicketAsync(authenticatedDto);
         
         if (result.IsSuccess)
         {
             _logger.LogInformation("Successfully created ticket {TicketId} for player {CreatorId}", 
-                result.Data!.Id, dto.CreatorId);
+                result.Data!.Id, authenticatedDto.CreatorId);
             return CreatedAtAction(nameof(GetTicket), new { id = result.Data!.Id }, result.Data);
         }
         
         _logger.LogWarning("Failed to create ticket for player {CreatorId}. Error: {Error}", 
-            dto.CreatorId, result.Error);
+            authenticatedDto.CreatorId, result.Error);
         return BadRequest(result.Error);
     }
 
@@ -101,10 +117,26 @@ public class TicketsController : ControllerBase
     [RequireUser]
     public async Task<ActionResult<ReplyDto>> AddReply(Guid ticketId, CreateReplyDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        // Extract user ID from JWT token claims
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+        {
+            _logger.LogWarning("Failed to extract user ID from token for reply creation");
+            return BadRequest("Invalid user authentication");
+        }
+
+        // Create a new DTO with the authenticated user ID
+        var authenticatedDto = new CreateReplyDto(dto.Content, userId, dto.TicketId);
+        
         _logger.LogInformation("Adding reply to ticket {TicketId} by user {UserId}", 
-            ticketId, dto.AuthorId);
+            ticketId, authenticatedDto.AuthorId);
             
-        var result = await _ticketService.AddReplyAsync(ticketId, dto);
+        var result = await _ticketService.AddReplyAsync(ticketId, authenticatedDto);
         
         if (result.IsSuccess)
         {
@@ -144,6 +176,12 @@ public class TicketsController : ControllerBase
         {
             _logger.LogInformation("Successfully resolved ticket {TicketId} by agent {AgentId}", id, agentId);
             return Ok(result.Data);
+        }
+        
+        if (result.Error?.Contains("not found") == true)
+        {
+            _logger.LogWarning("Ticket {TicketId} not found for resolution by agent {AgentId}", id, agentId);
+            return NotFound(result.Error);
         }
         
         _logger.LogWarning("Failed to resolve ticket {TicketId} by agent {AgentId}. Error: {Error}", 

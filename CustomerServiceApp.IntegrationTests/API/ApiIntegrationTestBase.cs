@@ -74,10 +74,8 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     private static async Task SeedTestDataAsync(CustomerServiceDbContext context, IPasswordHasher passwordHasher)
     {
         // Clear existing data to ensure test isolation
-        context.Users.RemoveRange(context.Users);
-        context.Tickets.RemoveRange(context.Tickets);
-        context.Replies.RemoveRange(context.Replies);
-        await context.SaveChangesAsync();
+        await context.Database.EnsureDeletedAsync();
+        await context.Database.EnsureCreatedAsync();
 
         // Create test players with explicit password verification
         var testPassword = "password123";
@@ -228,12 +226,12 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     /// </summary>
     protected async Task<TicketDto> CreateSampleTicketAsync()
     {
-        var authResult = await AuthenticateAsPlayerAsync();
+        await AuthenticateAsPlayerAsync();
 
         var createTicketDto = new CreateTicketDto(
             "Integration Test Ticket",
             "This is a test ticket created during integration testing.",
-            authResult.User.Id
+            Guid.Empty // This will be ignored and replaced with authenticated user ID
         );
 
         var response = await PostAsync("/api/tickets", createTicketDto);
@@ -253,12 +251,12 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
         try
         {
             // Temporarily authenticate as player to create ticket
-            var authResult = await AuthenticateAsPlayerAsync();
+            await AuthenticateAsPlayerAsync();
 
             var createTicketDto = new CreateTicketDto(
                 "Integration Test Ticket",
                 "This is a test ticket created during integration testing.",
-                authResult.User.Id
+                Guid.Empty // This will be ignored and replaced with authenticated user ID
             );
 
             var response = await PostAsync("/api/tickets", createTicketDto);

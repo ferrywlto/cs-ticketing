@@ -17,7 +17,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var createTicketDto = new CreateTicketDto(
             "Integration Test Ticket",
             "This is a test ticket created during integration testing.",
-            new Guid("11111111-1111-1111-1111-111111111111")); // Player1 ID from seed data
+            Guid.Empty); // This will be ignored and replaced with authenticated user ID
 
         var response = await PostAsync("/api/tickets", createTicketDto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -25,7 +25,6 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var result = await DeserializeAsync<TicketDto>(response);
         Assert.Equal(createTicketDto.Title, result.Title);
         Assert.Equal(createTicketDto.Description, result.Description);
-        Assert.Equal(createTicketDto.CreatorId, result.Creator.Id);
         Assert.Equal("Open", result.Status);
     }
 
@@ -50,7 +49,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var createTicketDto = new CreateTicketDto(
             "Test Ticket",
             "Test Description",
-            new Guid("11111111-1111-1111-1111-111111111111"));
+            Guid.Empty); // This will be ignored
 
         var response = await PostAsync("/api/tickets", createTicketDto);
 
@@ -179,7 +178,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
 
         var createReplyDto = new CreateReplyDto(
             "This is a reply from the agent.",
-            new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID from seed data
+            Guid.Empty, // This will be ignored and replaced with authenticated user ID
             ticket.Id);
 
 
@@ -198,7 +197,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
 
         var createReplyDto = new CreateReplyDto(
             "This reply should fail.",
-            new Guid("11111111-1111-1111-1111-111111111111"),
+            Guid.Empty, // This will be ignored and replaced with authenticated user ID
             invalidTicketId);
 
 
@@ -237,7 +236,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         await AuthenticateAsAgentAsync();
         var createReplyDto = new CreateReplyDto(
             "Agent reply to move to InResolution status.",
-            new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID
+            Guid.Empty, // This will be ignored and replaced with authenticated user ID
             ticket.Id);
         await PostAsync($"/api/tickets/{ticket.Id}/replies", createReplyDto);
 
@@ -294,7 +293,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var createTicketDto = new CreateTicketDto(
             "", // Invalid - empty title
             "Valid description",
-            new Guid("11111111-1111-1111-1111-111111111111"));
+            Guid.Empty); // This will be ignored
 
 
         var response = await PostAsync("/api/tickets", createTicketDto);

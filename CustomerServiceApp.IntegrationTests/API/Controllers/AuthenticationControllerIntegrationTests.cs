@@ -13,7 +13,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithValidCredentials_ReturnsOkWithToken()
     {
-        var loginRequest = new LoginRequestDto("player1@example.com", "Player123!");
+        var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 

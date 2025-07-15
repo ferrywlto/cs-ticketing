@@ -26,13 +26,31 @@ public class TicketsControllerTests
     [Fact]
     public async Task CreateTicket_WithValidDto_ReturnsCreatedResult()
     {
+        var playerId = Guid.NewGuid();
         var createDto = new CreateTicketDto(
             "Test Ticket",
             "Test Description",
-            Guid.NewGuid());
+            Guid.Empty); // This will be ignored, playerId from JWT will be used
+
+        // Setup JWT claims for player
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, playerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var creatorDto = new PlayerDto(
-            createDto.CreatorId,
+            playerId,
             "player@example.com",
             "Test Player",
             "P001");
@@ -47,7 +65,10 @@ public class TicketsControllerTests
             DateTime.UtcNow);
 
         var result = Result<TicketDto>.Success(ticketDto);
-        _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
+        _mockTicketService.Setup(s => s.CreateTicketAsync(It.Is<CreateTicketDto>(dto => 
+            dto.Title == createDto.Title && 
+            dto.Description == createDto.Description && 
+            dto.CreatorId == playerId)))
                          .ReturnsAsync(result);
 
         var response = await _controller.CreateTicket(createDto);
@@ -61,19 +82,70 @@ public class TicketsControllerTests
     [Fact]
     public async Task CreateTicket_WithFailure_ReturnsBadRequest()
     {
+        var playerId = Guid.NewGuid();
         var createDto = new CreateTicketDto(
             "Test Ticket",
             "Test Description",
-            Guid.NewGuid());
+            Guid.Empty); // This will be ignored
+
+        // Setup JWT claims for player
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, playerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var result = Result<TicketDto>.Failure("Creator not found");
-        _mockTicketService.Setup(s => s.CreateTicketAsync(createDto))
+        _mockTicketService.Setup(s => s.CreateTicketAsync(It.Is<CreateTicketDto>(dto => 
+            dto.Title == createDto.Title && 
+            dto.Description == createDto.Description && 
+            dto.CreatorId == playerId)))
                          .ReturnsAsync(result);
 
         var response = await _controller.CreateTicket(createDto);
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
         Assert.Equal("Creator not found", badRequestResult.Value);
+    }
+
+    [Fact]
+    public async Task CreateTicket_WithInvalidPlayerClaims_ReturnsBadRequest()
+    {
+        var createDto = new CreateTicketDto(
+            "Test Ticket",
+            "Test Description",
+            Guid.Empty);
+
+        // Setup JWT claims without NameIdentifier (invalid player ID)
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var response = await _controller.CreateTicket(createDto);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Invalid player authentication", badRequestResult.Value);
     }
 
     [Fact]
@@ -291,22 +363,43 @@ public class TicketsControllerTests
     public async Task AddReply_WithValidData_ReturnsOk()
     {
         var ticketId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
         var createReplyDto = new CreateReplyDto(
             "This is a reply",
-            Guid.NewGuid(),
+            Guid.Empty, // This will be ignored
             ticketId);
+
+        // Setup JWT claims for user
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var replyDto = new ReplyDto(
             Guid.NewGuid(),
             createReplyDto.Content,
             new AgentDto(
-                createReplyDto.AuthorId,
+                userId,
                 "agent@example.com",
                 "CS Agent"),
             DateTime.UtcNow);
 
         var result = Result<ReplyDto>.Success(replyDto);
-        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, createReplyDto))
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, It.Is<CreateReplyDto>(dto => 
+            dto.Content == createReplyDto.Content && 
+            dto.AuthorId == userId &&
+            dto.TicketId == createReplyDto.TicketId)))
                          .ReturnsAsync(result);
 
         var response = await _controller.AddReply(ticketId, createReplyDto);

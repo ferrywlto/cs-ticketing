@@ -22,6 +22,11 @@ public class UsersController : ControllerBase
     [RequireAgent]
     public async Task<ActionResult<PlayerDto>> CreatePlayer(CreatePlayerDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         _logger.LogInformation("Creating new player with email: {Email}", dto.Email);
         
         var result = await _userService.CreatePlayerAsync(dto);
@@ -42,6 +47,11 @@ public class UsersController : ControllerBase
     [RequireAgent]
     public async Task<ActionResult<AgentDto>> CreateAgent(CreateAgentDto dto)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
         _logger.LogInformation("Creating new agent with email: {Email}", dto.Email);
         
         var result = await _userService.CreateAgentAsync(dto);
