@@ -64,9 +64,14 @@ public abstract record CreateUserDto(
 /// DTO record for creating new Player entities
 /// </summary>
 public record CreatePlayerDto(
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
     string Email,
+    [Required(ErrorMessage = "Name is required.")]
     string Name,
     string? Avatar,
+    [Required(ErrorMessage = "Password is required.")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
     string Password,
     [Required(ErrorMessage = "Player number is required.")]
     string PlayerNumber) : CreateUserDto(Email, Name, Avatar, Password);
@@ -75,9 +80,14 @@ public record CreatePlayerDto(
 /// DTO record for creating new Agent entities
 /// </summary>
 public record CreateAgentDto(
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
     string Email,
+    [Required(ErrorMessage = "Name is required.")]
     string Name,
     string? Avatar,
+    [Required(ErrorMessage = "Password is required.")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
     string Password) : CreateUserDto(Email, Name, Avatar, Password);
 
 /// <summary>

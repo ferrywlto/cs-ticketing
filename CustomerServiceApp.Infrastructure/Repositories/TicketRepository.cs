@@ -18,11 +18,10 @@ public class TicketRepository : ITicketRepository
         _context = context;
     }
 
-    public async Task<Ticket> CreateAsync(Ticket ticket)
+    public Task<Ticket> CreateAsync(Ticket ticket)
     {
         _context.Tickets.Add(ticket);
-        await _context.SaveChangesAsync();
-        return ticket;
+        return Task.FromResult(ticket);
     }
 
     public async Task<Ticket?> GetByIdAsync(Guid id)
@@ -54,9 +53,9 @@ public class TicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task UpdateAsync(Ticket ticket)
+    public Task UpdateAsync(Ticket ticket)
     {
         _context.Tickets.Update(ticket);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 }

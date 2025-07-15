@@ -112,7 +112,14 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
             PasswordHash = passwordHasher.HashPassword("agentpass123")
         };
 
-        context.Users.AddRange(player1, player2, agent1);
+        var agent2 = new Domain.Users.Agent
+        {
+            Email = "agent@customerservice.com",
+            Name = "Customer Service Agent",
+            PasswordHash = passwordHasher.HashPassword("agentpass456")
+        };
+
+        context.Users.AddRange(player1, player2, agent1, agent2);
         await context.SaveChangesAsync();
 
         // Create sample tickets
