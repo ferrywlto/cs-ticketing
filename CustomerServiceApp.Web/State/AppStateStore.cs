@@ -25,7 +25,7 @@ public class AppStateStore
     {
         lock (_lock)
         {
-            return _state;
+            return _state with { };
         }
     }
 

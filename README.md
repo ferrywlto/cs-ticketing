@@ -158,8 +158,24 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.10.0 (Current) - App State Management & Functional Authentication
-- **CustomerServiceApp.Web v1.3.0**: Complete Redux-pattern state management and functional sign-in implementation
+### Version 1.10.1 - Blazor Component Lifecycle Fixes
+- **CustomerServiceApp.Web v1.4.1**: Fixed production runtime errors with proper lifecycle management
+
+#### 🐛 **BUG FIXES**:
+- **Blazor Component Lifecycle Management**: 
+  - Fixed "duplicate subscription" error in Home component using proper `OnAfterRender(firstRender)` pattern
+  - Replaced `OnInitialized` with `OnAfterRender` to ensure single event subscription per component instance
+  - Eliminated async warnings by removing unnecessary async/await in authentication check methods
+  - Proper disposal pattern with `IDisposable` implementation for event unsubscription
+
+#### 🏗️ **STABILITY IMPROVEMENTS**:
+- **Component Event Management**: Thread-safe event subscription with `_isSubscribed` flag tracking
+- **Lifecycle Optimization**: First-render-only initialization prevents duplicate operations
+- **Memory Management**: Proper event cleanup in Dispose method to prevent memory leaks
+- **Authentication Flow**: Seamless user redirection after component initialization without runtime errors
+
+### Version 1.10.0 - App State Management & Functional Authentication
+- **CustomerServiceApp.Web v1.4.0**: Complete Redux-pattern state management and functional sign-in implementation
 
 #### 🚀 **NEW FEATURES**:
 - **Redux-Pattern App State Management**:
