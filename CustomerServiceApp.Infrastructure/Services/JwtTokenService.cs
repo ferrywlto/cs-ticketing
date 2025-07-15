@@ -85,6 +85,18 @@ public class JwtTokenService : IJwtTokenService
         }
     }
 
+    public DateTime? GetExpirationFromValidatedToken(JwtSecurityToken jwtToken)
+    {
+        try
+        {
+            return jwtToken.ValidTo;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     public Guid? GetUserIdFromToken(string token)
     {
         if (string.IsNullOrEmpty(token))

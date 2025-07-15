@@ -118,4 +118,29 @@ public class JwtTokenServiceTests
         Assert.NotNull(userId);
         Assert.Equal(playerDto.Id, userId);
     }
+
+    [Fact]
+    public void GetExpirationFromValidatedToken_WithValidJwtToken_ReturnsExpirationTime()
+    {
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            "test@example.com",
+            "Test Player",
+            "P001");
+
+        var beforeGeneration = DateTime.UtcNow;
+        var token = _jwtTokenService.GenerateToken(playerDto);
+        var afterGeneration = DateTime.UtcNow;
+        var jwtToken = _jwtTokenService.ValidateToken(token);
+        var expirationTime = _jwtTokenService.GetExpirationFromValidatedToken(jwtToken!);
+
+        Assert.NotNull(expirationTime);
+        
+        // The expiration should be approximately 60 minutes from generation time
+        var expectedExpiration = beforeGeneration.AddMinutes(60);
+        var timeDifference = Math.Abs((expirationTime.Value - expectedExpiration).TotalMinutes);
+        
+        Assert.True(timeDifference < 1, $"Expected expiration to be around 60 minutes from generation. Difference: {timeDifference} minutes");
+        Assert.True(expirationTime > afterGeneration, "Expiration time should be in the future");
+    }
 }

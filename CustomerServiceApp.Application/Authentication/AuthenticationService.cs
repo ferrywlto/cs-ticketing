@@ -39,7 +39,12 @@ public class AuthenticationService : IAuthenticationService
 
             var userDto = _mapper.MapToDto(user);
             var token = _jwtTokenService.GenerateToken(userDto);
-            var expiresAt = DateTime.UtcNow.AddHours(1); // Default 1 hour expiry
+            
+            // Extract expiration from the generated token
+            var jwtToken = _jwtTokenService.ValidateToken(token);
+            var expiresAt = jwtToken != null 
+                ? _jwtTokenService.GetExpirationFromValidatedToken(jwtToken) ?? DateTime.UtcNow.AddHours(1)
+                : DateTime.UtcNow.AddHours(1); // Fallback to 1 hour if token validation fails
 
             var authResult = new AuthenticationResultDto(userDto, token, expiresAt);
 

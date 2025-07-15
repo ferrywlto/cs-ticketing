@@ -35,4 +35,11 @@ public interface IJwtTokenService
     /// <param name="jwtToken">The JWT security token</param>
     /// <returns>User ID if extraction is successful, null otherwise</returns>
     Guid? GetUserIdFromValidatedToken(JwtSecurityToken jwtToken);
+    
+    /// <summary>
+    /// Extracts the expiration time from a validated JWT security token
+    /// </summary>
+    /// <param name="jwtToken">The JWT security token</param>
+    /// <returns>Expiration time if extraction is successful, null otherwise</returns>
+    DateTime? GetExpirationFromValidatedToken(JwtSecurityToken jwtToken);
 }
