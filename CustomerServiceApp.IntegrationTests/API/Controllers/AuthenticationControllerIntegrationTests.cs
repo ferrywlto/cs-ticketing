@@ -1,9 +1,11 @@
 using System.Net;
 using CustomerServiceApp.Application.Authentication;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace CustomerServiceApp.IntegrationTests.API.Controllers;
 
+[Collection("Sequential Integration Tests")]
 public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
 {
     public AuthenticationControllerIntegrationTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -13,6 +15,9 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithValidCredentials_ReturnsOkWithToken()
     {
+        // Reset database for clean test state
+        await ResetDatabaseAsync();
+        
         var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);

@@ -1,9 +1,11 @@
 using System.Net;
 using CustomerServiceApp.Application.Common.DTOs;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace CustomerServiceApp.IntegrationTests.API.Controllers;
 
+[Collection("Sequential Integration Tests")]
 public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
 {
     public TicketsControllerIntegrationTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -45,7 +47,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreateTicket_AsAgent_ReturnsForbidden()
     {
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createTicketDto = new CreateTicketDto(
             "Test Ticket",
             "Test Description",
@@ -103,7 +105,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await CreateSampleTicketAsync(); // Create a ticket first
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
 
 
         var response = await GetAsync("/api/tickets/unresolved");
@@ -172,17 +174,16 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AddReply_WithValidData_ReturnsOk()
     {
+        await ResetDatabaseAsync();
 
-        var ticket = await CreateSampleTicketAsync();
-        await AuthenticateAsAgentAsync(); // Switch to agent to reply
+        await AuthenticateAsAgent1Async(); // Switch to agent to reply
 
         var createReplyDto = new CreateReplyDto(
             "This is a reply from the agent.",
-            Guid.Empty, // This will be ignored and replaced with authenticated user ID
-            ticket.Id);
+            Agent1Id,
+            Ticket2Id);
 
-
-        var response = await PostAsync($"/api/tickets/{ticket.Id}/replies", createReplyDto);
+        var response = await PostAsync($"/api/tickets/{Ticket2Id}/replies", createReplyDto);
 
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -191,6 +192,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AddReply_WithInvalidTicketId_ReturnsNotFound()
     {
+        await ResetDatabaseAsync();
 
         await AuthenticateAsPlayerAsync();
         var invalidTicketId = Guid.NewGuid();
@@ -233,7 +235,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var ticket = await CreateSampleTicketAsync();
         
         // First, add an agent reply to change status to "InResolution"
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createReplyDto = new CreateReplyDto(
             "Agent reply to move to InResolution status.",
             Guid.Empty, // This will be ignored and replaced with authenticated user ID
@@ -264,7 +266,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     public async Task ResolveTicket_WithInvalidTicketId_ReturnsNotFound()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var invalidTicketId = Guid.NewGuid();
 
 
@@ -288,6 +290,7 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreateTicket_WithInvalidData_ReturnsBadRequest()
     {
+        await ResetDatabaseAsync();
 
         await AuthenticateAsPlayerAsync();
         var createTicketDto = new CreateTicketDto(

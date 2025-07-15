@@ -174,10 +174,15 @@ public class TicketService : ITicketService
             var reply = new Reply
             {
                 Content = dto.Content,
-                Author = author
+                Author = author,
+                TicketId = ticketId
             };
 
+            // Execute domain logic (this will change ticket status if needed)
             ticket.AddReply(reply);
+            
+            // Save changes to both ticket and reply
+            await _unitOfWork.Replies.CreateAsync(reply);
             await _unitOfWork.Tickets.UpdateAsync(ticket);
             await _unitOfWork.SaveChangesAsync();
 

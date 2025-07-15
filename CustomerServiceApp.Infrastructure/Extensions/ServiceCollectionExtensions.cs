@@ -191,7 +191,8 @@ public static class ServiceCollectionExtensions
         var reply1 = new CustomerServiceApp.Domain.Tickets.Reply
         {
             Content = "We're looking into this issue. Can you provide more details?",
-            Author = agent1
+            Author = agent1,
+            TicketId = ticket1.Id
         };
 
         ticket1.AddReply(reply1);
@@ -199,7 +200,8 @@ public static class ServiceCollectionExtensions
         var reply2 = new CustomerServiceApp.Domain.Tickets.Reply
         {
             Content = "I tried resetting my password but it still doesn't work.",
-            Author = player1
+            Author = player1,
+            TicketId = ticket1.Id
         };
 
         ticket1.AddReply(reply2);

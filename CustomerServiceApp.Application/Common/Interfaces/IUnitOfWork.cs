@@ -7,5 +7,6 @@ public interface IUnitOfWork
 {
     ITicketRepository Tickets { get; }
     IUserRepository Users { get; }
+    IReplyRepository Replies { get; }
     Task SaveChangesAsync();
 }

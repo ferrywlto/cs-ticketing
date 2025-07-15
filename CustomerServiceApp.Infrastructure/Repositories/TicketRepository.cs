@@ -55,7 +55,13 @@ public class TicketRepository : ITicketRepository
 
     public Task UpdateAsync(Ticket ticket)
     {
-        _context.Tickets.Update(ticket);
+        // Ensure the ticket is tracked by EF
+        var entry = _context.Entry(ticket);
+        if (entry.State == Microsoft.EntityFrameworkCore.EntityState.Detached)
+        {
+            _context.Tickets.Attach(ticket);
+        }
+        entry.State = Microsoft.EntityFrameworkCore.EntityState.Modified;
         return Task.CompletedTask;
     }
 }

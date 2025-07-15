@@ -1,9 +1,11 @@
 using System.Net;
 using CustomerServiceApp.Application.Common.DTOs;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Xunit;
 
 namespace CustomerServiceApp.IntegrationTests.API.Controllers;
 
+[Collection("Sequential Integration Tests")]
 public class UsersControllerIntegrationTests : ApiIntegrationTestBase
 {
     public UsersControllerIntegrationTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -13,8 +15,10 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreatePlayer_AsAgent_ReturnsCreated()
     {
+        // Reset database for clean test state
+        await ResetDatabaseAsync();
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createPlayerDto = new CreatePlayerDto(
             "newplayer@example.com",
             "New Player",
@@ -38,6 +42,8 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreatePlayer_AsPlayer_ReturnsForbidden()
     {
+        // Reset database for clean test state
+        await ResetDatabaseAsync();
 
         await AuthenticateAsPlayerAsync();
         var createPlayerDto = new CreatePlayerDto(
@@ -57,6 +63,8 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreatePlayer_WithoutAuthentication_ReturnsUnauthorized()
     {
+        // Reset database for clean test state
+        await ResetDatabaseAsync();
 
         ClearAuthentication();
         var createPlayerDto = new CreatePlayerDto(
@@ -77,7 +85,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreatePlayer_WithDuplicateEmail_ReturnsBadRequest()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createPlayerDto = new CreatePlayerDto(
             "player1@example.com", // This email already exists in seed data
             "Duplicate Player",
@@ -96,7 +104,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreatePlayer_WithInvalidData_ReturnsBadRequest()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createPlayerDto = new CreatePlayerDto(
             "invalid-email", // Invalid email format
             "Test Player",
@@ -115,7 +123,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreateAgent_AsAgent_ReturnsCreated()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createAgentDto = new CreateAgentDto(
             "newagent@customerservice.com",
             "New Agent",
@@ -174,7 +182,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreateAgent_WithDuplicateEmail_ReturnsBadRequest()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createAgentDto = new CreateAgentDto(
             "agent@customerservice.com", // This email already exists in seed data
             "Duplicate Agent",
@@ -191,9 +199,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task GetUser_WithValidId_ReturnsOk()
     {
+        // Reset database for clean test state
+        await ResetDatabaseAsync();
 
-        await AuthenticateAsAgentAsync();
-        var playerId = new Guid("11111111-1111-1111-1111-111111111111"); // Player1 ID from seed data
+        await AuthenticateAsAgent1Async();
+        var playerId = Player1Id; // Use static ID from base class
 
 
         var response = await GetAsync($"/api/users/{playerId}");
@@ -210,7 +220,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task GetUser_WithInvalidId_ReturnsNotFound()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var invalidId = Guid.NewGuid();
 
 
@@ -238,7 +248,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreatePlayer_WithMissingRequiredFields_ReturnsBadRequest()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createPlayerDto = new CreatePlayerDto(
             "test@example.com",
             "", // Missing required name
@@ -257,7 +267,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreateAgent_WithMissingRequiredFields_ReturnsBadRequest()
     {
 
-        await AuthenticateAsAgentAsync();
+        await AuthenticateAsAgent1Async();
         var createAgentDto = new CreateAgentDto(
             "test@example.com",
             "Test Agent",

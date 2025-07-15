@@ -7,9 +7,11 @@ using CustomerServiceApp.Infrastructure.Data;
 using CustomerServiceApp.IntegrationTests.API;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Xunit;
 
 namespace CustomerServiceApp.IntegrationTests.API.Controllers;
 
+[Collection("Sequential Integration Tests")]
 public class AuthenticationDebugTests : ApiIntegrationTestBase
 {
     public AuthenticationDebugTests(WebApplicationFactory<Program> factory) : base(factory) { }

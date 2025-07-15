@@ -11,6 +11,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly CustomerServiceDbContext _context;
     private ITicketRepository? _tickets;
     private IUserRepository? _users;
+    private IReplyRepository? _replies;
 
     public UnitOfWork(CustomerServiceDbContext context)
     {
@@ -19,6 +20,7 @@ public class UnitOfWork : IUnitOfWork
 
     public ITicketRepository Tickets => _tickets ??= new TicketRepository(_context);
     public IUserRepository Users => _users ??= new UserRepository(_context);
+    public IReplyRepository Replies => _replies ??= new ReplyRepository(_context);
 
     public async Task SaveChangesAsync()
     {
