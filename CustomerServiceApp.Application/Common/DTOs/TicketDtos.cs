@@ -4,60 +4,48 @@ using CustomerServiceApp.Domain.Tickets;
 namespace CustomerServiceApp.Application.Common.DTOs;
 
 /// <summary>
-/// DTO for Ticket entities
+/// DTO record for Ticket entities
 /// </summary>
-public class TicketDto
-{
-    public Guid Id { get; init; }
-    
+public record TicketDto(
+    Guid Id,
     [Required(ErrorMessage = "Title is required.")]
-    public required string Title { get; init; }
-    
+    string Title,
     [Required(ErrorMessage = "Description is required.")]
-    public required string Description { get; init; }
-    
-    public required PlayerDto Creator { get; init; }
-    
-    public string Status { get; init; } = "Open";
-    
-    public DateTime CreatedDate { get; init; }
-    
-    public DateTime LastUpdateDate { get; init; }
-    
-    public DateTime? ResolvedDate { get; init; }
-    
-    public IEnumerable<ReplyDto> Messages { get; init; } = new List<ReplyDto>();
+    string Description,
+    PlayerDto Creator,
+    string Status = "Open",
+    DateTime CreatedDate = default,
+    DateTime LastUpdateDate = default,
+    DateTime? ResolvedDate = null,
+    AgentDto? ResolvedBy = null,
+    IEnumerable<ReplyDto>? Messages = null)
+{
+    public IEnumerable<ReplyDto> Messages { get; init; } = Messages ?? new List<ReplyDto>();
 }
 
 /// <summary>
-/// DTO for creating new Ticket entities
+/// DTO record for creating new Ticket entities
 /// </summary>
-public class CreateTicketDto
-{
+public record CreateTicketDto(
     [Required(ErrorMessage = "Title is required.")]
-    public required string Title { get; init; }
-    
+    string Title,
     [Required(ErrorMessage = "Description is required.")]
-    public required string Description { get; init; }
-    
+    string Description,
     [Required(ErrorMessage = "Creator ID is required.")]
-    public required Guid CreatorId { get; init; }
-}
+    Guid CreatorId);
 
 /// <summary>
-/// DTO for ticket list views with minimal information
+/// DTO record for ticket list views with minimal information
 /// </summary>
-public class TicketSummaryDto
-{
-    public Guid Id { get; init; }
-    public required string Title { get; init; }
-    public required string Description { get; init; }
-    public required PlayerDto Creator { get; init; }
-    public string Status { get; init; } = "Open";
-    public DateTime CreatedDate { get; init; }
-    public DateTime LastUpdateDate { get; init; }
-    public int MessageCount { get; init; }
-}
+public record TicketSummaryDto(
+    Guid Id,
+    string Title,
+    string Description,
+    PlayerDto Creator,
+    string Status = "Open",
+    DateTime CreatedDate = default,
+    DateTime LastUpdateDate = default,
+    int MessageCount = 0);
 
 /// <summary>
 /// DTO for updating ticket status

@@ -25,9 +25,13 @@ public class CustomerServiceDbContext : DbContext
 
         // Configure User hierarchy with Table Per Hierarchy (TPH)
         modelBuilder.Entity<User>()
-            .HasDiscriminator<string>("UserType")
+            .HasDiscriminator<string>("UserTypeDiscriminator")
             .HasValue<Player>("Player")
             .HasValue<Agent>("Agent");
+
+        // Ignore the UserType property since it's abstract and we use a different discriminator
+        modelBuilder.Entity<User>()
+            .Ignore(u => u.UserType);
 
         // Configure User entity
         modelBuilder.Entity<User>(entity =>

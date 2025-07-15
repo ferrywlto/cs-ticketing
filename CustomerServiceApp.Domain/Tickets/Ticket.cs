@@ -26,6 +26,8 @@ public class Ticket
 
     public DateTime? ResolvedDate { get; private set; }
 
+    public Agent? ResolvedBy { get; private set; }
+
     public IReadOnlyList<Reply> Messages => _messages.OrderBy(m => m.CreatedDate).ToList();
 
     public Ticket()
@@ -53,13 +55,17 @@ public class Ticket
         }
     }
 
-    public void Resolve()
+    public void Resolve(Agent resolvedBy)
     {
+        if (resolvedBy == null)
+            throw new ArgumentNullException(nameof(resolvedBy));
+
         if (Status != TicketStatus.InResolution)
             throw new InvalidOperationException("Ticket can only be resolved from InResolution status.");
 
         Status = TicketStatus.Resolved;
         ResolvedDate = DateTime.UtcNow;
+        ResolvedBy = resolvedBy;
         LastUpdateDate = DateTime.UtcNow;
     }
 }

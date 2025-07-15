@@ -49,6 +49,44 @@ public static class ServiceCollectionExtensions
             }
         });
 
+        // Configure JWT token options from configuration with validation
+        services.Configure<JwtTokenOptions>(jwtTokenOptions =>
+        {
+            var section = configuration.GetSection("JwtToken");
+            section.Bind(jwtTokenOptions);
+
+            // Validate that required configuration is present
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.SecretKey))
+            {
+                throw new InvalidOperationException(
+                    "JwtToken:SecretKey is required. " +
+                    "For development, set it using: dotnet user-secrets set \"JwtToken:SecretKey\" \"your-secure-secret-key-here\" " +
+                    "For production, set it via environment variables or appsettings.json");
+            }
+
+            if (jwtTokenOptions.SecretKey.Length < 32)
+            {
+                throw new InvalidOperationException(
+                    "JwtToken:SecretKey must be at least 32 characters long for security.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.Issuer))
+            {
+                throw new InvalidOperationException("JWT:Issuer is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtTokenOptions.Audience))
+            {
+                throw new InvalidOperationException("JWT:Audience is required.");
+            }
+
+            if (jwtTokenOptions.ExpiryMinutes <= 0 || jwtTokenOptions.ExpiryMinutes > 1440) // max 24 hours
+            {
+                throw new InvalidOperationException(
+                    "JWT:ExpiryMinutes must be between 1 and 1440 minutes (24 hours).");
+            }
+        });
+
         // Add DbContext with In-Memory database
         services.AddDbContext<CustomerServiceDbContext>(options =>
             options.UseInMemoryDatabase("CustomerServiceDb"));
@@ -65,6 +103,7 @@ public static class ServiceCollectionExtensions
         // Register infrastructure services
         services.AddScoped<IMapper, Mapper>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
 
         return services;
     }
@@ -152,7 +191,8 @@ public static class ServiceCollectionExtensions
         var reply1 = new CustomerServiceApp.Domain.Tickets.Reply
         {
             Content = "We're looking into this issue. Can you provide more details?",
-            Author = agent1
+            Author = agent1,
+            TicketId = ticket1.Id
         };
 
         ticket1.AddReply(reply1);
@@ -160,7 +200,8 @@ public static class ServiceCollectionExtensions
         var reply2 = new CustomerServiceApp.Domain.Tickets.Reply
         {
             Content = "I tried resetting my password but it still doesn't work.",
-            Author = player1
+            Author = player1,
+            TicketId = ticket1.Id
         };
 
         ticket1.AddReply(reply2);

@@ -1,79 +1,94 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CustomerServiceApp.Application.Common.DTOs;
 
 /// <summary>
-/// Base DTO for user entities
+/// Base DTO record for user entities
 /// </summary>
-public abstract class UserDto
-{
-    public Guid Id { get; init; }
-    
+[JsonDerivedType(typeof(PlayerDto), typeDiscriminator: "Player")]
+[JsonDerivedType(typeof(AgentDto), typeDiscriminator: "Agent")]
+public abstract record UserDto(
+    Guid Id,
     [Required(ErrorMessage = "Email is required.")]
     [EmailAddress(ErrorMessage = "Invalid email format.")]
-    public required string Email { get; init; }
-    
+    string Email,
     [Required(ErrorMessage = "Name is required.")]
-    public required string Name { get; init; }
-    
-    public string? Avatar { get; init; }
-    
+    string Name,
+    string? Avatar = null)
+{
     public abstract string UserType { get; }
 }
 
 /// <summary>
-/// DTO for Player entities
+/// DTO record for Player entities
 /// </summary>
-public class PlayerDto : UserDto
-{
+public record PlayerDto(
+    Guid Id,
+    string Email,
+    string Name,
     [Required(ErrorMessage = "Player number is required.")]
-    public required string PlayerNumber { get; init; }
-    
+    string PlayerNumber,
+    string? Avatar = null) : UserDto(Id, Email, Name, Avatar)
+{
     public override string UserType => "Player";
 }
 
 /// <summary>
-/// DTO for Agent entities
+/// DTO record for Agent entities
 /// </summary>
-public class AgentDto : UserDto
+public record AgentDto(
+    Guid Id,
+    string Email,
+    string Name,
+    string? Avatar = null) : UserDto(Id, Email, Name, Avatar)
 {
     public override string UserType => "Agent";
 }
 
 /// <summary>
-/// DTO for creating new user entities
+/// DTO record for creating new user entities
 /// </summary>
-public abstract class CreateUserDto
-{
+public abstract record CreateUserDto(
     [Required(ErrorMessage = "Email is required.")]
     [EmailAddress(ErrorMessage = "Invalid email format.")]
-    public required string Email { get; init; }
-    
+    string Email,
     [Required(ErrorMessage = "Name is required.")]
-    public required string Name { get; init; }
-    
-    public string? Avatar { get; init; }
-    
+    string Name,
+    string? Avatar,
     [Required(ErrorMessage = "Password is required.")]
     [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
-    public required string Password { get; init; }
-}
+    string Password);
 
 /// <summary>
-/// DTO for creating new Player entities
+/// DTO record for creating new Player entities
 /// </summary>
-public class CreatePlayerDto : CreateUserDto
-{
+public record CreatePlayerDto(
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    string Email,
+    [Required(ErrorMessage = "Name is required.")]
+    string Name,
+    string? Avatar,
+    [Required(ErrorMessage = "Password is required.")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
+    string Password,
     [Required(ErrorMessage = "Player number is required.")]
-    public required string PlayerNumber { get; init; }
-}
+    string PlayerNumber) : CreateUserDto(Email, Name, Avatar, Password);
 
 /// <summary>
-/// DTO for creating new Agent entities
+/// DTO record for creating new Agent entities
 /// </summary>
-public class CreateAgentDto : CreateUserDto
-{
-}
+public record CreateAgentDto(
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
+    string Email,
+    [Required(ErrorMessage = "Name is required.")]
+    string Name,
+    string? Avatar,
+    [Required(ErrorMessage = "Password is required.")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
+    string Password) : CreateUserDto(Email, Name, Avatar, Password);
 
 /// <summary>
 /// DTO for updating user information

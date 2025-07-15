@@ -1,0 +1,222 @@
+using System.IdentityModel.Tokens.Jwt;
+using CustomerServiceApp.Application.Authentication;
+using CustomerServiceApp.Application.Common.DTOs;
+using CustomerServiceApp.Application.Common.Interfaces;
+using CustomerServiceApp.Domain.Users;
+using CustomerServiceApp.Infrastructure.Options;
+using CustomerServiceApp.Infrastructure.Services;
+using Microsoft.Extensions.Options;
+using Moq;
+
+namespace CustomerServiceApp.UnitTests.Infrastructure.Services;
+
+public class AuthenticationServiceTests
+{
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private readonly Mock<IMapper> _mockMapper;
+    private readonly Mock<IPasswordHasher> _mockPasswordHasher;
+    private readonly Mock<IJwtTokenService> _mockJwtTokenService;
+    private readonly AuthenticationService _authenticationService;
+
+    public AuthenticationServiceTests()
+    {
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
+        _mockMapper = new Mock<IMapper>();
+        _mockPasswordHasher = new Mock<IPasswordHasher>();
+        _mockJwtTokenService = new Mock<IJwtTokenService>();
+        _authenticationService = new AuthenticationService(
+            _mockUnitOfWork.Object,
+            _mockMapper.Object,
+            _mockPasswordHasher.Object,
+            _mockJwtTokenService.Object);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithValidCredentials_ReturnsSuccessWithToken()
+    {
+        var loginRequest = new LoginRequestDto(
+            "test@example.com",
+            "password123");
+
+        var player = new Player 
+        { 
+            Id = Guid.NewGuid(), 
+            Email = loginRequest.Email, 
+            Name = "Test Player",
+            PasswordHash = "hashedPassword",
+            PlayerNumber = "P001"
+        };
+
+        var playerDto = new PlayerDto(
+            player.Id,
+            loginRequest.Email,
+            "Test Player",
+            "P001");
+
+        var token = "jwt.token.here";
+        var mockUserRepository = new Mock<IUserRepository>();
+        
+        _mockUnitOfWork.Setup(u => u.Users).Returns(mockUserRepository.Object);
+        mockUserRepository.Setup(r => r.GetByEmailAsync(loginRequest.Email))
+                         .ReturnsAsync(player);
+        _mockPasswordHasher.Setup(h => h.VerifyPassword(loginRequest.Password, player.PasswordHash))
+                          .Returns(true);
+        _mockMapper.Setup(m => m.MapToDto(It.IsAny<User>())).Returns(playerDto);
+        _mockJwtTokenService.Setup(j => j.GenerateToken(playerDto))
+                           .Returns(token);
+
+        var result = await _authenticationService.LoginAsync(loginRequest);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(playerDto.Id, result.Data.User.Id);
+        Assert.Equal(token, result.Data.Token);
+        Assert.True(result.Data.ExpiresAt > DateTime.UtcNow);
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithInvalidCredentials_ReturnsFailure()
+    {
+        var loginRequest = new LoginRequestDto(
+            "test@example.com",
+            "wrongpassword");
+
+        var mockUserRepository = new Mock<IUserRepository>();
+        _mockUnitOfWork.Setup(u => u.Users).Returns(mockUserRepository.Object);
+        mockUserRepository.Setup(r => r.GetByEmailAsync(loginRequest.Email))
+                         .ReturnsAsync((User?)null);
+
+        var result = await _authenticationService.LoginAsync(loginRequest);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Invalid email or password", result.Error);
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithValidToken_ReturnsUserDto()
+    {
+        var userId = Guid.NewGuid();
+        var player = new Player
+        {
+            Id = userId,
+            Email = "test@example.com",
+            Name = "Test Player",
+            PasswordHash = "hashedPassword",
+            PlayerNumber = "P001"
+        };
+
+        var playerDto = new PlayerDto(
+            userId,
+            "test@example.com",
+            "Test Player",
+            "P001");
+
+        // Create a real JWT token for testing
+        var mockOptions = new Mock<IOptions<JwtTokenOptions>>();
+        var jwtTokenOptions = new JwtTokenOptions
+        {
+            SecretKey = "ThisIsASecretKeyForJWTTokenGeneration32Characters",
+            Issuer = "CustomerServiceApp",
+            Audience = "CustomerServiceApp.Users",
+            ExpiryMinutes = 60
+        };
+        mockOptions.Setup(o => o.Value).Returns(jwtTokenOptions);
+        
+        var realJwtService = new JwtTokenService(mockOptions.Object);
+        var token = realJwtService.GenerateToken(playerDto);
+        var validatedToken = realJwtService.ValidateToken(token);
+
+        var mockUserRepository = new Mock<IUserRepository>();
+        _mockUnitOfWork.Setup(u => u.Users).Returns(mockUserRepository.Object);
+
+        _mockJwtTokenService.Setup(j => j.ValidateToken(token))
+                           .Returns(validatedToken);
+        _mockJwtTokenService.Setup(j => j.GetUserIdFromValidatedToken(validatedToken!))
+                           .Returns(userId);
+        mockUserRepository.Setup(r => r.GetByIdAsync(userId))
+                         .ReturnsAsync(player);
+        _mockMapper.Setup(m => m.MapToDto(It.IsAny<User>())).Returns(playerDto);
+
+        var result = await _authenticationService.ValidateTokenAsync(token);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(userId, result.Data!.Id);
+    }
+
+    [Fact]
+    public async Task ValidateTokenAsync_WithInvalidToken_ReturnsFailure()
+    {
+        var token = "invalid.jwt.token";
+
+        _mockJwtTokenService.Setup(j => j.ValidateToken(token))
+                           .Returns((JwtSecurityToken?)null);
+
+        var result = await _authenticationService.ValidateTokenAsync(token);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal("Invalid token", result.Error);
+    }
+
+    [Fact]
+    public async Task LoginAsync_SetsExpirationFromTokenClaims()
+    {
+        var loginRequest = new LoginRequestDto(
+            "test@example.com",
+            "password123");
+
+        var player = new Player 
+        { 
+            Id = Guid.NewGuid(), 
+            Email = loginRequest.Email, 
+            Name = "Test Player",
+            PasswordHash = "hashedPassword",
+            PlayerNumber = "P001"
+        };
+
+        var playerDto = new PlayerDto(
+            player.Id,
+            loginRequest.Email,
+            "Test Player",
+            "P001");
+
+        // Create a real JWT token with specific expiration
+        var mockOptions = new Mock<IOptions<JwtTokenOptions>>();
+        var jwtTokenOptions = new JwtTokenOptions
+        {
+            SecretKey = "ThisIsASecretKeyForJWTTokenGeneration32Characters",
+            Issuer = "CustomerServiceApp",
+            Audience = "CustomerServiceApp.Users",
+            ExpiryMinutes = 120 // 2 hours for testing
+        };
+        mockOptions.Setup(o => o.Value).Returns(jwtTokenOptions);
+        
+        var realJwtService = new JwtTokenService(mockOptions.Object);
+        var token = realJwtService.GenerateToken(playerDto);
+        var validatedToken = realJwtService.ValidateToken(token);
+        var expectedExpiration = realJwtService.GetExpirationFromValidatedToken(validatedToken!);
+
+        var mockUserRepository = new Mock<IUserRepository>();
+        
+        _mockUnitOfWork.Setup(u => u.Users).Returns(mockUserRepository.Object);
+        mockUserRepository.Setup(r => r.GetByEmailAsync(loginRequest.Email))
+                         .ReturnsAsync(player);
+        _mockPasswordHasher.Setup(h => h.VerifyPassword(loginRequest.Password, player.PasswordHash))
+                          .Returns(true);
+        _mockMapper.Setup(m => m.MapToDto(It.IsAny<User>())).Returns(playerDto);
+        _mockJwtTokenService.Setup(j => j.GenerateToken(playerDto))
+                           .Returns(token);
+        _mockJwtTokenService.Setup(j => j.ValidateToken(token))
+                           .Returns(validatedToken);
+        _mockJwtTokenService.Setup(j => j.GetExpirationFromValidatedToken(validatedToken!))
+                           .Returns(expectedExpiration);
+
+        var result = await _authenticationService.LoginAsync(loginRequest);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        
+        // Verify the expiration time matches the token's expiration (within 1 second tolerance)
+        var timeDifference = Math.Abs((result.Data.ExpiresAt - expectedExpiration!.Value).TotalSeconds);
+        Assert.True(timeDifference < 1, $"Expected expiration time to match token expiration. Difference: {timeDifference} seconds");
+    }
+}

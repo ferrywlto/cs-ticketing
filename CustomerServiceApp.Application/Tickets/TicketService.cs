@@ -174,10 +174,15 @@ public class TicketService : ITicketService
             var reply = new Reply
             {
                 Content = dto.Content,
-                Author = author
+                Author = author,
+                TicketId = ticketId
             };
 
+            // Execute domain logic (this will change ticket status if needed)
             ticket.AddReply(reply);
+            
+            // Save changes to both ticket and reply
+            await _unitOfWork.Replies.CreateAsync(reply);
             await _unitOfWork.Tickets.UpdateAsync(ticket);
             await _unitOfWork.SaveChangesAsync();
 
@@ -192,7 +197,7 @@ public class TicketService : ITicketService
     /// <summary>
     /// Resolves a ticket - only from InResolution status
     /// </summary>
-    public async Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId)
+    public async Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId, Guid agentId)
     {
         try
         {
@@ -207,7 +212,13 @@ public class TicketService : ITicketService
                 return Result<TicketDto>.Failure($"Can only resolve tickets that are in resolution status. Current status: {ticket.Status}");
             }
 
-            ticket.Resolve();
+            var agent = await _unitOfWork.Users.GetByIdAsync(agentId) as Agent;
+            if (agent == null)
+            {
+                return Result<TicketDto>.Failure($"Agent with ID '{agentId}' was not found.");
+            }
+
+            ticket.Resolve(agent);
             await _unitOfWork.Tickets.UpdateAsync(ticket);
             await _unitOfWork.SaveChangesAsync();
 

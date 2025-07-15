@@ -17,11 +17,10 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    public async Task<TUser> CreateAsync<TUser>(TUser user) where TUser : User
+    public Task<TUser> CreateAsync<TUser>(TUser user) where TUser : User
     {
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        return user;
+        return Task.FromResult(user);
     }
 
     public async Task<User?> GetByIdAsync(Guid id)

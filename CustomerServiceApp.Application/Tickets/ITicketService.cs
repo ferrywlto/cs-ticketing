@@ -2,7 +2,7 @@ using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Application.Common.Models;
 using CustomerServiceApp.Domain.Tickets;
 
-namespace CustomerServiceApp.Application.Common.Interfaces;
+namespace CustomerServiceApp.Application.Tickets;
 
 /// <summary>
 /// Interface for ticket service operations
@@ -42,5 +42,5 @@ public interface ITicketService
     /// <summary>
     /// Resolves a ticket - only from InResolution status
     /// </summary>
-    Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId);
+    Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId, Guid agentId);
 }

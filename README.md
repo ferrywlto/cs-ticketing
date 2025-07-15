@@ -39,16 +39,19 @@ TBD
     3. Ticket - Initiated by a player of what happened. 
     4. Reply - Initiated by either a player or an agent.
 - Each Reply contains:
+    - Id - unique identifier of a reply
     - What - The message content
     - Who - A player / an agent
     - When - The time
-- Each player and agent is a person that:
-    - Has an email as identifier.
+- Each player and agent is a user that:
+    - Has an Id - unique identifier
+    - Has an email as user name
     - Has a name
     - Has an avatar in blob url format
     - Has password hash
     - Player has an additional field: player number
 - Each ticket contains:
+    - Id - unique identifier 
     - Creator - Player
     - Status - from ["Open", "In Resolution", "Resolved"], the initial status is open. When ever an agent replies the ticket status will change to in resolution if it is in open status. When an agent click resolve, and the ticket is in resolution status, it will change to resolved.
     - Title - Ticket title
@@ -56,6 +59,7 @@ TBD
     - CreatedDate - The timestamp that the thread created.
     - LastUpdateDate - The timestamp that the thread created, the last message created in that thread or when the ticket is resolved.
     - Messages - A list of messages from both player and agents, sort by message date in ascending order.
+    - ResolvedBy - The agent who resolved the ticket
 
 ## Assumptions
 - Once a message is send, it cannot be edited for integrity.
@@ -145,7 +149,76 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.3.2 (Current)
+### Version 1.9.0 (Current) - EF Core Infrastructure & Repository Pattern Completion
+- **CustomerServiceApp.API v1.7.0**: Enhanced ticket reply functionality with proper EF Core integration
+- **CustomerServiceApp.Application v1.9.0**: Comprehensive reply handling with balanced domain/repository approach
+- **CustomerServiceApp.Infrastructure v1.5.0**: Complete repository pattern implementation with Reply repository
+
+#### 🔧 **INFRASTRUCTURE FIXES**:
+- **EF Core Tracking Issues Resolved**: 
+  - Fixed "Attempted to update or delete an entity that does not exist in the store" error when adding replies
+  - Implemented complete `IReplyRepository` with CreateAsync, GetByIdAsync, GetByTicketIdAsync operations
+  - Enhanced `UnitOfWork` pattern with Reply repository support and lazy loading
+  - Proper entity tracking for complex relationships (Ticket → Reply, User → Reply)
+
+- **Repository Pattern Completion**:
+  - `ReplyRepository` implementation with EF Core Include statements for Author navigation
+  - Unit of Work coordination across Tickets, Users, and Replies repositories
+  - Consistent async operations pattern across all repository implementations
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Balanced Domain/Repository Approach**: 
+  - `TicketService.AddReplyAsync` preserves domain logic with `ticket.AddReply(reply)` for business rules
+  - Repository operations handle persistence with proper EF Core tracking
+  - Maintains ticket status transitions (Open → InResolution) when agents reply
+  - Clean separation between business logic and data access concerns
+
+### Version 1.8.0 - Complete JWT Authentication & Authorization System
+- **CustomerServiceApp.API v1.6.0**: Production-ready JWT authentication and authorization with comprehensive security
+- **CustomerServiceApp.Application v1.8.0**: Enhanced clean architecture with authentication services and role-based authorization
+- **CustomerServiceApp.Infrastructure v1.4.0**: Complete JWT infrastructure with token services and database initialization
+- **CustomerServiceApp.UnitTests v1.2.0**: Comprehensive test coverage with 101 total tests (89 unit + 12 integration)
+
+#### 🚀 **NEW FEATURES**:
+- **Complete JWT Authentication System**: 
+  - Role-specific login endpoints: `/api/authentication/player/login` and `/api/authentication/agent/login`
+  - JWT token generation with role-based claims (Player/Agent)
+  - Secure token validation with proper error handling
+  - Cross-role authentication prevention (players cannot login as agents and vice versa)
+
+- **Role-Based Authorization**:
+  - `[Authorize(Roles = "Player")]` for player-specific endpoints
+  - `[Authorize(Roles = "Agent")]` for agent-specific endpoints  
+  - Proper 401/403 responses for unauthorized access attempts
+  - JWT middleware integration with ASP.NET Core authorization
+
+- **Database Integration & Seeding**:
+  - Automatic database initialization on application startup
+  - Development seed data with 3 players, 1 agent, and sample tickets
+  - In-memory Entity Framework Core with proper relationship mapping
+  - Production-ready configuration with environment-based seeding
+
+#### 🔒 **SECURITY ENHANCEMENTS**:
+- **PBKDF2 Password Hashing**: Cryptographically secure password storage with configurable salt and iterations
+- **JWT Security**: HS256 algorithm with configurable secret keys and expiration times
+- **Role Segregation**: Complete separation between player and agent authentication flows
+- **Request Validation**: Comprehensive model validation and error handling
+- **Structured Logging**: Security audit trail for all authentication attempts and failures
+
+#### 📐 **CLEAN ARCHITECTURE IMPROVEMENTS**:
+- **Feature-Based Organization**: Interfaces organized by domain features (Users, Tickets, Authentication)
+- **Dependency Injection**: Complete DI configuration for all services and repositories
+- **Single Responsibility**: Authentication logic properly separated from user services
+- **Interface Segregation**: Focused interfaces for each domain service
+
+#### 🛠 **TECHNICAL IMPROVEMENTS**:
+- **JWT Token Service**: Complete token generation, validation, and user extraction
+- **Authentication Service**: Secure login with password verification and role validation
+- **Enhanced Controllers**: Comprehensive logging and proper HTTP status code responses
+- **Error Handling**: Proper exception handling with appropriate HTTP responses
+- **Configuration Management**: User secrets support for secure development configuration
+
+### Version 1.3.2
 - **CustomerServiceApp.Infrastructure v1.1.2**: Fixed validation annotations for security options
   - **FIXED**: Added missing validation attributes to `PasswordHasherOptions.Salt` property
     - Added `[Required]` validation to ensure salt is not empty
@@ -206,6 +279,22 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - **Feature**: Table Per Hierarchy inheritance strategy for optimal performance
   - **Feature**: Comprehensive database seeding with realistic test data
   - **Quality**: Zero compilation errors, all 16 tests passing with 100% domain coverage
+
+### Version 1.3.0
+- **CustomerServiceApp.API v1.3.0**: Clean Architecture interface organization and authentication improvements
+- **CustomerServiceApp.Application v1.9.0**: Major architectural refactoring for Clean Architecture compliance
+- **BREAKING CHANGE**: Interface namespaces reorganized following Clean Architecture pattern
+  - Moved `IUserService` from `Common.Interfaces` to `Users` namespace
+  - Moved `ITicketService` from `Common.Interfaces` to `Tickets` namespace  
+  - Moved `IAuthenticationService` from `Common.Interfaces` to `Authentication` namespace
+- **Enhancement**: Fixed Single Responsibility Principle violation
+  - Removed authentication logic from `UserService` class
+  - `AuthenticationService` now handles authentication directly using repositories
+  - Updated constructor dependencies to use `IUnitOfWork`, `IMapper`, `IPasswordHasher`
+- **Enhancement**: Feature-based interface organization
+  - Interfaces now co-located with their implementations by domain feature
+  - Improved code discoverability and maintainability
+  - Updated all import statements across controllers, services, and unit tests
 
 ### Version 1.2.0
 - **CustomerServiceApp.Domain v1.2.0**: Complete domain model implementation with modern C# patterns and comprehensive business logic

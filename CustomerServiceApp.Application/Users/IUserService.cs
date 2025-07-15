@@ -1,7 +1,7 @@
 using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Application.Common.Models;
 
-namespace CustomerServiceApp.Application.Common.Interfaces;
+namespace CustomerServiceApp.Application.Users;
 
 /// <summary>
 /// Interface for user service operations
@@ -17,11 +17,6 @@ public interface IUserService
     /// Creates a new agent account
     /// </summary>
     Task<Result<AgentDto>> CreateAgentAsync(CreateAgentDto dto);
-
-    /// <summary>
-    /// Authenticates a user with email and password
-    /// </summary>
-    Task<Result<UserDto>> AuthenticateAsync(string email, string password);
 
     /// <summary>
     /// Gets a user by ID

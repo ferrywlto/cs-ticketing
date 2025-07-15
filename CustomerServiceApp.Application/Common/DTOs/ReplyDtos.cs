@@ -3,31 +3,22 @@ using System.ComponentModel.DataAnnotations;
 namespace CustomerServiceApp.Application.Common.DTOs;
 
 /// <summary>
-/// DTO for Reply entities
+/// DTO record for Reply entities
 /// </summary>
-public class ReplyDto
-{
-    public Guid Id { get; init; }
-    
+public record ReplyDto(
+    Guid Id,
     [Required(ErrorMessage = "Content is required.")]
-    public required string Content { get; init; }
-    
-    public required UserDto Author { get; init; }
-    
-    public DateTime CreatedDate { get; init; }
-}
+    string Content,
+    UserDto Author,
+    DateTime CreatedDate = default);
 
 /// <summary>
-/// DTO for creating new Reply entities
+/// DTO record for creating new Reply entities
 /// </summary>
-public class CreateReplyDto
-{
+public record CreateReplyDto(
     [Required(ErrorMessage = "Content is required.")]
-    public required string Content { get; init; }
-    
+    string Content,
     [Required(ErrorMessage = "Author ID is required.")]
-    public required Guid AuthorId { get; init; }
-    
+    Guid AuthorId,
     [Required(ErrorMessage = "Ticket ID is required.")]
-    public required Guid TicketId { get; init; }
-}
+    Guid TicketId);

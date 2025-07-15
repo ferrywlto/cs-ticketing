@@ -14,4 +14,7 @@ public class Reply
     public required User Author { get; init; }
 
     public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
+
+    // Foreign key for Ticket relationship
+    public Guid TicketId { get; init; }
 }

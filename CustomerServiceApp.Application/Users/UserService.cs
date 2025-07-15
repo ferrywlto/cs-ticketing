@@ -12,11 +12,13 @@ public class UserService : IUserService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IPasswordHasher _passwordHasher;
 
-    public UserService(IUnitOfWork unitOfWork, IMapper mapper)
+    public UserService(IUnitOfWork unitOfWork, IMapper mapper, IPasswordHasher passwordHasher)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _passwordHasher = passwordHasher;
     }
 
     /// <summary>
@@ -36,7 +38,7 @@ public class UserService : IUserService
             {
                 Email = dto.Email,
                 Name = dto.Name,
-                PasswordHash = dto.Password, // Hash the password in production
+                PasswordHash = _passwordHasher.HashPassword(dto.Password),
                 PlayerNumber = dto.PlayerNumber
             };
 
@@ -68,7 +70,7 @@ public class UserService : IUserService
             {
                 Email = dto.Email,
                 Name = dto.Name,
-                PasswordHash = dto.Password // Hash the password in production
+                PasswordHash = _passwordHasher.HashPassword(dto.Password)
             };
 
             await _unitOfWork.Users.CreateAsync(agent);
@@ -79,27 +81,6 @@ public class UserService : IUserService
         catch (Exception ex)
         {
             return Result<AgentDto>.Failure($"Failed to create agent: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Authenticates a user with email and password
-    /// </summary>
-    public async Task<Result<UserDto>> AuthenticateAsync(string email, string passwordHash)
-    {
-        try
-        {
-            var user = await _unitOfWork.Users.GetByEmailAsync(email);
-            if (user == null || user.PasswordHash != passwordHash)
-            {
-                return Result<UserDto>.Failure("Invalid email or password.");
-            }
-
-            return Result<UserDto>.Success(_mapper.MapToDto(user));
-        }
-        catch (Exception ex)
-        {
-            return Result<UserDto>.Failure($"Authentication failed: {ex.Message}");
         }
     }
 
