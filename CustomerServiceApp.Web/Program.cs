@@ -10,13 +10,10 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Configure HTTP client with base address pointing to API
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7294") });
-
+builder.Services.AddLogging();
 // Register application services
-builder.Services.AddSingleton<AppStateStore>(provider => 
-    new AppStateStore(
-        provider.GetService<ILocalStorageService>(),
-        provider.GetService<ILogger<AppStateStore>>()));
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddSingleton<AppStateStore>();
+builder.Services.AddSingleton<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ApiService>();
 
 await builder.Build().RunAsync();
