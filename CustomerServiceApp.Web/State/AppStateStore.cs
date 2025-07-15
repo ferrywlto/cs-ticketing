@@ -138,7 +138,7 @@ public class AppStateStore
     /// Dispatches tickets loaded action
     /// </summary>
     /// <param name="tickets">List of tickets</param>
-    public void DispatchTicketsLoaded(IReadOnlyList<TicketDto> tickets)
+    public async Task DispatchTicketsLoadedAsync(IReadOnlyList<TicketDto> tickets)
     {
         lock (_lock)
         {
@@ -149,6 +149,7 @@ public class AppStateStore
                 Error = null
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -156,12 +157,13 @@ public class AppStateStore
     /// Dispatches ticket selection action
     /// </summary>
     /// <param name="ticket">Selected ticket</param>
-    public void DispatchSelectTicket(TicketDto? ticket)
+    public async Task DispatchSelectTicketAsync(TicketDto? ticket)
     {
         lock (_lock)
         {
             _state = _state with { SelectedTicket = ticket };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -169,7 +171,7 @@ public class AppStateStore
     /// Dispatches ticket creation action
     /// </summary>
     /// <param name="ticket">Newly created ticket</param>
-    public void DispatchTicketCreated(TicketDto ticket)
+    public async Task DispatchTicketCreatedAsync(TicketDto ticket)
     {
         lock (_lock)
         {
@@ -182,6 +184,7 @@ public class AppStateStore
                 Error = null
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -189,7 +192,7 @@ public class AppStateStore
     /// Dispatches ticket updated action
     /// </summary>
     /// <param name="updatedTicket">Updated ticket</param>
-    public void DispatchTicketUpdated(TicketDto updatedTicket)
+    public async Task DispatchTicketUpdatedAsync(TicketDto updatedTicket)
     {
         lock (_lock)
         {
@@ -205,13 +208,14 @@ public class AppStateStore
                 Error = null
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
     /// <summary>
     /// Clears all messages
     /// </summary>
-    public void DispatchClearMessages()
+    public async Task DispatchClearMessagesAsync()
     {
         lock (_lock)
         {
@@ -221,6 +225,7 @@ public class AppStateStore
                 SuccessMessage = null
             };
         }
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -372,5 +377,54 @@ public class AppStateStore
     public void DispatchSuccessMessage(string message)
     {
         _ = DispatchSuccessMessageAsync(message); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches tickets loaded action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="tickets">List of tickets</param>
+    [Obsolete("Use DispatchTicketsLoadedAsync for better async handling")]
+    public void DispatchTicketsLoaded(IReadOnlyList<TicketDto> tickets)
+    {
+        _ = DispatchTicketsLoadedAsync(tickets); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches ticket selection action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="ticket">Selected ticket</param>
+    [Obsolete("Use DispatchSelectTicketAsync for better async handling")]
+    public void DispatchSelectTicket(TicketDto? ticket)
+    {
+        _ = DispatchSelectTicketAsync(ticket); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches ticket creation action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="ticket">Newly created ticket</param>
+    [Obsolete("Use DispatchTicketCreatedAsync for better async handling")]
+    public void DispatchTicketCreated(TicketDto ticket)
+    {
+        _ = DispatchTicketCreatedAsync(ticket); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches ticket updated action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="updatedTicket">Updated ticket</param>
+    [Obsolete("Use DispatchTicketUpdatedAsync for better async handling")]
+    public void DispatchTicketUpdated(TicketDto updatedTicket)
+    {
+        _ = DispatchTicketUpdatedAsync(updatedTicket); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Clears all messages (synchronous wrapper for backward compatibility)
+    /// </summary>
+    [Obsolete("Use DispatchClearMessagesAsync for better async handling")]
+    public void DispatchClearMessages()
+    {
+        _ = DispatchClearMessagesAsync(); // Fire and forget for backward compatibility
     }
 }
