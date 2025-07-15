@@ -158,6 +158,27 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.11.0 - Local Storage State Persistence
+- **CustomerServiceApp.Web v1.4.0**: Added local storage persistence for authentication state
+- **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality
+
+#### 🚀 **NEW FEATURES**:
+- **Local Storage Persistence**: 
+  - Automatic persistence of authentication state (user, token, expiration) to browser local storage
+  - State restoration on application startup with automatic token expiration handling
+  - Graceful error handling for storage failures and invalid data
+  - Authorization header restoration for seamless API integration
+
+#### 🏗️ **INFRASTRUCTURE**:
+- **LocalStorageService**: JavaScript interop service for browser local storage access with error handling
+- **AppStateStore Enhancement**: Integrated local storage persistence with existing Redux pattern
+- **App Component Initialization**: State loading on application startup with API authorization setup
+
+#### 🧪 **TESTING**:
+- **Comprehensive Unit Tests**: 6 new test cases covering all local storage scenarios
+- **Mock-based Testing**: Proper mocking of IJSRuntime and ILocalStorageService for isolated testing
+- **Edge Case Coverage**: Token expiration, invalid data, and null data handling
+
 ### Version 1.10.1 - Blazor Component Lifecycle Fixes
 - **CustomerServiceApp.Web v1.4.1**: Fixed production runtime errors with proper lifecycle management
 

@@ -75,6 +75,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("development",
+        builder => builder.WithOrigins("https://localhost:7131")
+                          .AllowAnyMethod()
+                          .AllowAnyHeader());
+});
+
 // Add application services
 builder.Services.AddApplication();
 
@@ -91,6 +99,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseCors("development");
 }
 
 app.UseHttpsRedirection();

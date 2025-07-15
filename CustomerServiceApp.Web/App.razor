@@ -1,4 +1,9 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using CustomerServiceApp.Web.State
+@using CustomerServiceApp.Web.Services
+@inject AppStateStore AppState
+@inject ApiService ApiService
+
+<Router AppAssembly="@typeof(App).Assembly">
     <Found Context="routeData">
         <PageTitle>Customer Service App</PageTitle>
         <RouteView RouteData="@routeData" DefaultLayout="@typeof(TicketLayout)" />
@@ -11,3 +16,18 @@
         </LayoutView>
     </NotFound>
 </Router>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        // Load persisted state from local storage
+        await AppState.LoadStateFromLocalStorageAsync();
+        
+        // Set authorization header if user is authenticated
+        var state = AppState.GetState();
+        if (state.IsAuthenticated && !string.IsNullOrEmpty(state.Token))
+        {
+            ApiService.SetAuthorizationHeader(state.Token);
+        }
+    }
+}

@@ -1,16 +1,24 @@
 using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Common.DTOs;
+using CustomerServiceApp.Web.Services;
 using System.Text.Json;
 
 namespace CustomerServiceApp.Web.State;
 
 /// <summary>
-/// Centralized state management store following Redux pattern
+/// Centralized state management store following Redux pattern with local storage persistence
 /// </summary>
 public class AppStateStore
 {
     private AppState _state = new();
     private readonly object _lock = new();
+    private readonly ILocalStorageService? _localStorageService;
+    private const string StorageKey = "app-state";
+
+    public AppStateStore(ILocalStorageService? localStorageService = null)
+    {
+        _localStorageService = localStorageService;
+    }
 
     /// <summary>
     /// Event raised when state changes
@@ -46,6 +54,7 @@ public class AppStateStore
                 SuccessMessage = "Successfully signed in"
             };
         }
+        _ = PersistStateAsync(); // Fire and forget
         NotifyStateChanged();
     }
 
@@ -67,6 +76,7 @@ public class AppStateStore
                 SuccessMessage = "Successfully signed out"
             };
         }
+        _ = ClearPersistedStateAsync(); // Fire and forget
         NotifyStateChanged();
     }
 
@@ -214,5 +224,94 @@ public class AppStateStore
     private void NotifyStateChanged()
     {
         StateChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Loads state from local storage if available
+    /// </summary>
+    public async Task LoadStateFromLocalStorageAsync()
+    {
+        if (_localStorageService is null)
+            return;
+
+        try
+        {
+            var storedState = await _localStorageService.GetItemAsync(StorageKey);
+            if (string.IsNullOrEmpty(storedState))
+                return;
+
+            var deserializedState = JsonSerializer.Deserialize<AppState>(storedState);
+            if (deserializedState is null)
+                return;
+
+            // Check if token is expired
+            if (deserializedState.TokenExpiresAt.HasValue && 
+                deserializedState.TokenExpiresAt.Value <= DateTime.UtcNow)
+            {
+                // Token expired, clear storage and return
+                await ClearPersistedStateAsync();
+                return;
+            }
+
+            lock (_lock)
+            {
+                _state = deserializedState;
+            }
+            NotifyStateChanged();
+        }
+        catch (JsonException)
+        {
+            // Invalid JSON in storage, ignore and continue with default state
+            await ClearPersistedStateAsync();
+        }
+        catch (Exception)
+        {
+            // Any other exception, ignore and continue with default state
+        }
+    }
+
+    /// <summary>
+    /// Persists current state to local storage
+    /// </summary>
+    private async Task PersistStateAsync()
+    {
+        if (_localStorageService is null)
+            return;
+
+        try
+        {
+            // Only persist authentication-related state
+            var stateToPersist = new AppState
+            {
+                CurrentUser = _state.CurrentUser,
+                Token = _state.Token,
+                TokenExpiresAt = _state.TokenExpiresAt
+            };
+
+            var serializedState = JsonSerializer.Serialize(stateToPersist);
+            await _localStorageService.SetItemAsync(StorageKey, serializedState);
+        }
+        catch (Exception)
+        {
+            // Fail silently to avoid breaking the application
+        }
+    }
+
+    /// <summary>
+    /// Clears persisted state from local storage
+    /// </summary>
+    private async Task ClearPersistedStateAsync()
+    {
+        if (_localStorageService is null)
+            return;
+
+        try
+        {
+            await _localStorageService.RemoveItemAsync(StorageKey);
+        }
+        catch (Exception)
+        {
+            // Fail silently to avoid breaking the application
+        }
     }
 }
