@@ -4,6 +4,7 @@
 @inject ApiService ApiService
 @inject NavigationManager Navigation
 @implements IDisposable
+@using CustomerServiceApp.Application.Authentication
 
 <PageTitle>Customer Login</PageTitle>
 
@@ -23,19 +24,19 @@
                             </div>
                         }
                         
-                        <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                        <EditForm Model="@loginRequest" OnValidSubmit="@HandleLogin">
                             <DataAnnotationsValidator />
                             <ValidationSummary class="text-danger" />
                             
                             <div class="mb-3">
                                 <label for="player-email" class="form-label">Email</label>
-                                <InputText @bind-Value="loginModel.Email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@isLoading" />
-                                <ValidationMessage For="@(() => loginModel.Email)" class="text-danger" />
+                                <InputText @bind-Value="email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@isLoading" />
+                                <ValidationMessage For="@(() => loginRequest.Email)" class="text-danger" />
                             </div>
                             <div class="mb-3">
                                 <label for="player-password" class="form-label">Password</label>
-                                <InputText type="password" @bind-Value="loginModel.Password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@isLoading" />
-                                <ValidationMessage For="@(() => loginModel.Password)" class="text-danger" />
+                                <InputText type="password" @bind-Value="password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@isLoading" />
+                                <ValidationMessage For="@(() => loginRequest.Password)" class="text-danger" />
                             </div>
                             <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
                                 @if (isLoading)
@@ -63,9 +64,13 @@
 </div>
 
 @code {
-    private LoginModel loginModel = new();
+    private string email = string.Empty;
+    private string password = string.Empty;
     private string? errorMessage;
     private bool isLoading;
+
+    // Create the DTO dynamically for validation
+    private LoginRequestDto loginRequest => new(email, password);
 
     protected override void OnInitialized()
     {
@@ -89,7 +94,7 @@
         {
             await AppState.DispatchLoadingStateAsync(true);
             
-            var result = await ApiService.PlayerLoginAsync(loginModel.ToDto());
+            var result = await ApiService.PlayerLoginAsync(loginRequest);
             
             if (result != null)
             {
