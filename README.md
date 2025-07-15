@@ -158,12 +158,18 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.11.0 - Local Storage State Persistence with Comprehensive Logging
+### Version 1.12.0 - Async Dispatch Methods for Better Persistence Handling
+- **CustomerServiceApp.Web v1.6.0**: Implemented async dispatch methods for improved state persistence
 - **CustomerServiceApp.Application v1.11.0**: Enhanced AppStateStore with comprehensive exception logging
-- **CustomerServiceApp.Web v1.5.0**: Updated dependency injection for logger integration
 - **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality and logging
 
 #### 🚀 **NEW FEATURES**:
+- **Async State Management**: 
+  - New async methods `DispatchLoginAsync()` and `DispatchLogoutAsync()` for proper async/await pattern
+  - UI components updated to use async dispatch methods for better error handling
+  - Backward compatibility maintained with synchronous methods marked as obsolete
+  - Improved persistence reliability by awaiting storage operations instead of fire-and-forget
+
 - **Local Storage Persistence**: 
   - Automatic persistence of authentication state (user, token, expiration) to browser local storage
   - State restoration on application startup with automatic token expiration handling
