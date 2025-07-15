@@ -44,7 +44,7 @@ public class AppStateStore
     /// Dispatches login action
     /// </summary>
     /// <param name="authResult">Authentication result from login</param>
-    public void DispatchLogin(AuthenticationResultDto authResult)
+    public async Task DispatchLoginAsync(AuthenticationResultDto authResult)
     {
         lock (_lock)
         {
@@ -57,14 +57,14 @@ public class AppStateStore
                 SuccessMessage = "Successfully signed in"
             };
         }
-        _ = PersistStateAsync(); // Fire and forget
+        await PersistStateAsync();
         NotifyStateChanged();
     }
 
     /// <summary>
     /// Dispatches logout action
     /// </summary>
-    public void DispatchLogout()
+    public async Task DispatchLogoutAsync()
     {
         lock (_lock)
         {
@@ -79,7 +79,7 @@ public class AppStateStore
                 SuccessMessage = "Successfully signed out"
             };
         }
-        _ = ClearPersistedStateAsync(); // Fire and forget
+        await ClearPersistedStateAsync();
         NotifyStateChanged();
     }
 
@@ -320,5 +320,24 @@ public class AppStateStore
             // Fail silently to avoid breaking the application but log the error
             _logger?.LogWarning(ex, "Failed to clear persisted state from local storage. Storage may be unavailable.");
         }
+    }
+
+    /// <summary>
+    /// Dispatches login action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    /// <param name="authResult">Authentication result from login</param>
+    [Obsolete("Use DispatchLoginAsync for better async handling")]
+    public void DispatchLogin(AuthenticationResultDto authResult)
+    {
+        _ = DispatchLoginAsync(authResult); // Fire and forget for backward compatibility
+    }
+
+    /// <summary>
+    /// Dispatches logout action (synchronous wrapper for backward compatibility)
+    /// </summary>
+    [Obsolete("Use DispatchLogoutAsync for better async handling")]
+    public void DispatchLogout()
+    {
+        _ = DispatchLogoutAsync(); // Fire and forget for backward compatibility
     }
 }

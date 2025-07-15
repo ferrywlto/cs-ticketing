@@ -26,7 +26,7 @@ public class AppStateStoreWithLocalStorageTests
     }
 
     [Fact]
-    public void DispatchLogin_ShouldPersistStateToLocalStorage()
+    public async Task DispatchLogin_ShouldPersistStateToLocalStorage()
     {
         // Arrange
         var playerId = Guid.NewGuid();
@@ -44,7 +44,7 @@ public class AppStateStoreWithLocalStorageTests
         );
 
         // Act
-        _appStateStore.DispatchLogin(authResult);
+        await _appStateStore.DispatchLoginAsync(authResult);
 
         // Assert
         _mockLocalStorageService.Verify(
@@ -53,10 +53,10 @@ public class AppStateStoreWithLocalStorageTests
     }
 
     [Fact]
-    public void DispatchLogout_ShouldClearStateFromLocalStorage()
+    public async Task DispatchLogout_ShouldClearStateFromLocalStorage()
     {
         // Act
-        _appStateStore.DispatchLogout();
+        await _appStateStore.DispatchLogoutAsync();
 
         // Assert
         _mockLocalStorageService.Verify(
@@ -191,10 +191,7 @@ public class AppStateStoreWithLocalStorageTests
             .ThrowsAsync(new InvalidOperationException("Storage quota exceeded"));
 
         // Act
-        _appStateStore.DispatchLogin(authResult);
-        
-        // Allow async operation to complete
-        await Task.Delay(100);
+        await _appStateStore.DispatchLoginAsync(authResult);
 
         // Assert
         _mockLogger.Verify(
@@ -237,10 +234,7 @@ public class AppStateStoreWithLocalStorageTests
             .ThrowsAsync(new InvalidOperationException("Storage unavailable"));
 
         // Act
-        _appStateStore.DispatchLogout();
-        
-        // Allow async operation to complete
-        await Task.Delay(100);
+        await _appStateStore.DispatchLogoutAsync();
 
         // Assert
         _mockLogger.Verify(

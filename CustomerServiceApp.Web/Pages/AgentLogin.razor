@@ -101,7 +101,7 @@
                     return;
                 }
 
-                AppState.DispatchLogin(result);
+                await AppState.DispatchLoginAsync(result);
                 ApiService.SetAuthorizationHeader(result.Token);
                 
                 // Navigate to agent tickets
