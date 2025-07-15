@@ -1,16 +1,19 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace CustomerServiceApp.Application.Common.DTOs;
 
 /// <summary>
 /// Base DTO record for user entities
 /// </summary>
+[JsonDerivedType(typeof(PlayerDto), typeDiscriminator: "Player")]
+[JsonDerivedType(typeof(AgentDto), typeDiscriminator: "Agent")]
 public abstract record UserDto(
     Guid Id,
-    [property: Required(ErrorMessage = "Email is required.")]
-    [property: EmailAddress(ErrorMessage = "Invalid email format.")]
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
     string Email,
-    [property: Required(ErrorMessage = "Name is required.")]
+    [Required(ErrorMessage = "Name is required.")]
     string Name,
     string? Avatar = null)
 {
@@ -24,7 +27,7 @@ public record PlayerDto(
     Guid Id,
     string Email,
     string Name,
-    [property: Required(ErrorMessage = "Player number is required.")]
+    [Required(ErrorMessage = "Player number is required.")]
     string PlayerNumber,
     string? Avatar = null) : UserDto(Id, Email, Name, Avatar)
 {
@@ -47,14 +50,14 @@ public record AgentDto(
 /// DTO record for creating new user entities
 /// </summary>
 public abstract record CreateUserDto(
-    [property: Required(ErrorMessage = "Email is required.")]
-    [property: EmailAddress(ErrorMessage = "Invalid email format.")]
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
     string Email,
-    [property: Required(ErrorMessage = "Name is required.")]
+    [Required(ErrorMessage = "Name is required.")]
     string Name,
     string? Avatar,
-    [property: Required(ErrorMessage = "Password is required.")]
-    [property: MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
+    [Required(ErrorMessage = "Password is required.")]
+    [MinLength(6, ErrorMessage = "Password must be at least 6 characters long.")]
     string Password);
 
 /// <summary>
@@ -65,7 +68,7 @@ public record CreatePlayerDto(
     string Name,
     string? Avatar,
     string Password,
-    [property: Required(ErrorMessage = "Player number is required.")]
+    [Required(ErrorMessage = "Player number is required.")]
     string PlayerNumber) : CreateUserDto(Email, Name, Avatar, Password);
 
 /// <summary>

@@ -15,8 +15,8 @@ public record AuthenticationResultDto(
 /// Login request record
 /// </summary>
 public record LoginRequestDto(
-    [property: Required(ErrorMessage = "Email is required.")]
-    [property: EmailAddress(ErrorMessage = "Invalid email format.")]
+    [Required(ErrorMessage = "Email is required.")]
+    [EmailAddress(ErrorMessage = "Invalid email format.")]
     string Email,
-    [property: Required(ErrorMessage = "Password is required.")]
+    [Required(ErrorMessage = "Password is required.")]
     string Password);

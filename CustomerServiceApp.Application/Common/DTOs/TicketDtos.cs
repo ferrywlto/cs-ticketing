@@ -8,9 +8,9 @@ namespace CustomerServiceApp.Application.Common.DTOs;
 /// </summary>
 public record TicketDto(
     Guid Id,
-    [property: Required(ErrorMessage = "Title is required.")]
+    [Required(ErrorMessage = "Title is required.")]
     string Title,
-    [property: Required(ErrorMessage = "Description is required.")]
+    [Required(ErrorMessage = "Description is required.")]
     string Description,
     PlayerDto Creator,
     string Status = "Open",
@@ -26,11 +26,11 @@ public record TicketDto(
 /// DTO record for creating new Ticket entities
 /// </summary>
 public record CreateTicketDto(
-    [property: Required(ErrorMessage = "Title is required.")]
+    [Required(ErrorMessage = "Title is required.")]
     string Title,
-    [property: Required(ErrorMessage = "Description is required.")]
+    [Required(ErrorMessage = "Description is required.")]
     string Description,
-    [property: Required(ErrorMessage = "Creator ID is required.")]
+    [Required(ErrorMessage = "Creator ID is required.")]
     Guid CreatorId);
 
 /// <summary>

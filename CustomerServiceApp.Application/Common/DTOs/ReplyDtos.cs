@@ -7,7 +7,7 @@ namespace CustomerServiceApp.Application.Common.DTOs;
 /// </summary>
 public record ReplyDto(
     Guid Id,
-    [property: Required(ErrorMessage = "Content is required.")]
+    [Required(ErrorMessage = "Content is required.")]
     string Content,
     UserDto Author,
     DateTime CreatedDate = default);
@@ -16,9 +16,9 @@ public record ReplyDto(
 /// DTO record for creating new Reply entities
 /// </summary>
 public record CreateReplyDto(
-    [property: Required(ErrorMessage = "Content is required.")]
+    [Required(ErrorMessage = "Content is required.")]
     string Content,
-    [property: Required(ErrorMessage = "Author ID is required.")]
+    [Required(ErrorMessage = "Author ID is required.")]
     Guid AuthorId,
-    [property: Required(ErrorMessage = "Ticket ID is required.")]
+    [Required(ErrorMessage = "Ticket ID is required.")]
     Guid TicketId);
