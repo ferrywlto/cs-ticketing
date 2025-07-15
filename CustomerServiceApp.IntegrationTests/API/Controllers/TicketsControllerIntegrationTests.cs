@@ -32,12 +32,11 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task CreateTicket_WithoutAuthentication_ReturnsUnauthorized()
     {
-
         ClearAuthentication();
         var createTicketDto = new CreateTicketDto(
-            "Test Ticket",
-            "Test Description",
-            new Guid("11111111-1111-1111-1111-111111111111"));
+            "Integration Test Ticket",
+            "This is a test ticket created during integration testing.",
+            Guid.NewGuid()); // Any ID is fine since this should fail at auth level
 
         var response = await PostAsync("/api/tickets", createTicketDto);
 
@@ -147,13 +146,11 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task GetTicketsByPlayer_AsPlayer_ReturnsOk()
     {
-
-        await CreateSampleTicketAsync(); // Create a ticket first
-        var playerId = new Guid("11111111-1111-1111-1111-111111111111"); // Player1 ID
-
+        var ticketDto = await CreateSampleTicketAsync(); // Create a ticket first (authenticates as player)
+        var playerId = ticketDto.Creator.Id; // Use the player ID from the created ticket
+        // Note: Still authenticated as player from CreateSampleTicketAsync
 
         var response = await GetAsync($"/api/tickets/player/{playerId}");
-
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
@@ -165,13 +162,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task GetTicketsByPlayer_WithoutAuthentication_ReturnsUnauthorized()
     {
-
         ClearAuthentication();
-        var playerId = Guid.NewGuid();
-
+        var playerId = Guid.NewGuid(); // Any ID is fine since this should fail at auth level
 
         var response = await GetAsync($"/api/tickets/player/{playerId}");
-
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -284,13 +278,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task ResolveTicket_WithoutAuthentication_ReturnsUnauthorized()
     {
-
         ClearAuthentication();
-        var ticketId = Guid.NewGuid();
-
+        var ticketId = Guid.NewGuid(); // Any ID is fine since this should fail at auth level
 
         var response = await PutAsync($"/api/tickets/{ticketId}/resolve", new { });
-
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }

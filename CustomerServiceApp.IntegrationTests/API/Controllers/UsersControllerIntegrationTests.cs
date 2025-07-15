@@ -225,7 +225,7 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         ClearAuthentication();
-        var userId = Guid.NewGuid();
+        var userId = Guid.NewGuid(); // Any ID is fine since this should fail at auth level
 
 
         var response = await GetAsync($"/api/users/{userId}");

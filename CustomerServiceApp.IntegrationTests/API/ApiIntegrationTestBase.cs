@@ -38,10 +38,10 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
                 // Add test configuration for JWT and password hashing
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
-                    ["JWT:SecretKey"] = "ThisIsATestSecretKeyForIntegrationTestsOnly32Characters",
-                    ["JWT:Issuer"] = "CustomerServiceApp",
-                    ["JWT:Audience"] = "CustomerServiceApp.Users",
-                    ["JWT:ExpiryMinutes"] = "60",
+                    ["JwtToken:SecretKey"] = "ThisIsATestSecretKeyForIntegrationTestsOnly32Characters",
+                    ["JwtToken:Issuer"] = "CustomerServiceApp",
+                    ["JwtToken:Audience"] = "CustomerServiceApp.Users",
+                    ["JwtToken:ExpiryMinutes"] = "60",
                     ["PasswordHasher:Salt"] = "ThisIsATestSaltForIntegrationTestsOnly",
                     ["PasswordHasher:Iterations"] = "10000" // Lower for testing performance
                 });
@@ -139,7 +139,7 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     /// <summary>
     /// Authenticates as a player and sets the Authorization header
     /// </summary>
-    protected async Task<string> AuthenticateAsPlayerAsync()
+    protected async Task<AuthenticationResultDto> AuthenticateAsPlayerAsync()
     {
         var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
@@ -150,7 +150,7 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
         var token = result.Token;
 
         Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        return token;
+        return result;
     }
 
     /// <summary>
@@ -171,7 +171,7 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     }
 
     /// <summary>
-    /// Clears authentication headers
+    /// Clears the authentication header for testing unauthenticated scenarios
     /// </summary>
     protected void ClearAuthentication()
     {
@@ -228,18 +228,49 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     /// </summary>
     protected async Task<TicketDto> CreateSampleTicketAsync()
     {
-        await AuthenticateAsPlayerAsync();
+        var authResult = await AuthenticateAsPlayerAsync();
 
         var createTicketDto = new CreateTicketDto(
             "Integration Test Ticket",
             "This is a test ticket created during integration testing.",
-            new Guid("11111111-1111-1111-1111-111111111111") // Player1 ID from seed data
+            authResult.User.Id
         );
 
         var response = await PostAsync("/api/tickets", createTicketDto);
         response.EnsureSuccessStatusCode();
 
         return await DeserializeAsync<TicketDto>(response);
+    }
+
+    /// <summary>
+    /// Creates a sample ticket for testing purposes without changing authentication
+    /// </summary>
+    protected async Task<TicketDto> CreateSampleTicketWithoutAuthAsync()
+    {
+        // Save current authentication state
+        var currentAuth = Client.DefaultRequestHeaders.Authorization;
+        
+        try
+        {
+            // Temporarily authenticate as player to create ticket
+            var authResult = await AuthenticateAsPlayerAsync();
+
+            var createTicketDto = new CreateTicketDto(
+                "Integration Test Ticket",
+                "This is a test ticket created during integration testing.",
+                authResult.User.Id
+            );
+
+            var response = await PostAsync("/api/tickets", createTicketDto);
+            response.EnsureSuccessStatusCode();
+
+            return await DeserializeAsync<TicketDto>(response);
+        }
+        finally
+        {
+            // Restore previous authentication state
+            Client.DefaultRequestHeaders.Authorization = currentAuth;
+        }
     }
 
     /// <summary>

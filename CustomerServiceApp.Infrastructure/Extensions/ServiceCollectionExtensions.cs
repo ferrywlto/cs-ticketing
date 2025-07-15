@@ -52,22 +52,22 @@ public static class ServiceCollectionExtensions
         // Configure JWT token options from configuration with validation
         services.Configure<JwtTokenOptions>(jwtTokenOptions =>
         {
-            var section = configuration.GetSection("JWT");
+            var section = configuration.GetSection("JwtToken");
             section.Bind(jwtTokenOptions);
 
             // Validate that required configuration is present
             if (string.IsNullOrWhiteSpace(jwtTokenOptions.SecretKey))
             {
                 throw new InvalidOperationException(
-                    "JWT:SecretKey is required. " +
-                    "For development, set it using: dotnet user-secrets set \"JWT:SecretKey\" \"your-secure-secret-key-here\" " +
+                    "JwtToken:SecretKey is required. " +
+                    "For development, set it using: dotnet user-secrets set \"JwtToken:SecretKey\" \"your-secure-secret-key-here\" " +
                     "For production, set it via environment variables or appsettings.json");
             }
 
             if (jwtTokenOptions.SecretKey.Length < 32)
             {
                 throw new InvalidOperationException(
-                    "JWT:SecretKey must be at least 32 characters long for security.");
+                    "JwtToken:SecretKey must be at least 32 characters long for security.");
             }
 
             if (string.IsNullOrWhiteSpace(jwtTokenOptions.Issuer))
