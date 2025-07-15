@@ -4,60 +4,47 @@ using CustomerServiceApp.Domain.Tickets;
 namespace CustomerServiceApp.Application.Common.DTOs;
 
 /// <summary>
-/// DTO for Ticket entities
+/// DTO record for Ticket entities
 /// </summary>
-public class TicketDto
+public record TicketDto(
+    Guid Id,
+    [property: Required(ErrorMessage = "Title is required.")]
+    string Title,
+    [property: Required(ErrorMessage = "Description is required.")]
+    string Description,
+    PlayerDto Creator,
+    string Status = "Open",
+    DateTime CreatedDate = default,
+    DateTime LastUpdateDate = default,
+    DateTime? ResolvedDate = null,
+    IEnumerable<ReplyDto>? Messages = null)
 {
-    public Guid Id { get; init; }
-    
-    [Required(ErrorMessage = "Title is required.")]
-    public required string Title { get; init; }
-    
-    [Required(ErrorMessage = "Description is required.")]
-    public required string Description { get; init; }
-    
-    public required PlayerDto Creator { get; init; }
-    
-    public string Status { get; init; } = "Open";
-    
-    public DateTime CreatedDate { get; init; }
-    
-    public DateTime LastUpdateDate { get; init; }
-    
-    public DateTime? ResolvedDate { get; init; }
-    
-    public IEnumerable<ReplyDto> Messages { get; init; } = new List<ReplyDto>();
+    public IEnumerable<ReplyDto> Messages { get; init; } = Messages ?? new List<ReplyDto>();
 }
 
 /// <summary>
-/// DTO for creating new Ticket entities
+/// DTO record for creating new Ticket entities
 /// </summary>
-public class CreateTicketDto
-{
-    [Required(ErrorMessage = "Title is required.")]
-    public required string Title { get; init; }
-    
-    [Required(ErrorMessage = "Description is required.")]
-    public required string Description { get; init; }
-    
-    [Required(ErrorMessage = "Creator ID is required.")]
-    public required Guid CreatorId { get; init; }
-}
+public record CreateTicketDto(
+    [property: Required(ErrorMessage = "Title is required.")]
+    string Title,
+    [property: Required(ErrorMessage = "Description is required.")]
+    string Description,
+    [property: Required(ErrorMessage = "Creator ID is required.")]
+    Guid CreatorId);
 
 /// <summary>
-/// DTO for ticket list views with minimal information
+/// DTO record for ticket list views with minimal information
 /// </summary>
-public class TicketSummaryDto
-{
-    public Guid Id { get; init; }
-    public required string Title { get; init; }
-    public required string Description { get; init; }
-    public required PlayerDto Creator { get; init; }
-    public string Status { get; init; } = "Open";
-    public DateTime CreatedDate { get; init; }
-    public DateTime LastUpdateDate { get; init; }
-    public int MessageCount { get; init; }
-}
+public record TicketSummaryDto(
+    Guid Id,
+    string Title,
+    string Description,
+    PlayerDto Creator,
+    string Status = "Open",
+    DateTime CreatedDate = default,
+    DateTime LastUpdateDate = default,
+    int MessageCount = 0);
 
 /// <summary>
 /// DTO for updating ticket status

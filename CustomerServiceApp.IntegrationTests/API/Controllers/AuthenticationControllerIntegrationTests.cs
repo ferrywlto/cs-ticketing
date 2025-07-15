@@ -13,17 +13,14 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithValidCredentials_ReturnsOkWithToken()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "player1@example.com",
             Password = "Player123!"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
         var result = await DeserializeAsync<AuthenticationResultDto>(response);
@@ -37,51 +34,42 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "player1@example.com",
             Password = "WrongPassword"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task PlayerLogin_WithAgentCredentials_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "agent1@example.com",
             Password = "agentpass123"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task AgentLogin_WithValidCredentials_ReturnsOkWithToken()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "agent1@example.com",
             Password = "agentpass123"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
         var result = await DeserializeAsync<AuthenticationResultDto>(response);
@@ -95,102 +83,84 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "agent1@example.com",
             Password = "WrongPassword"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task AgentLogin_WithPlayerCredentials_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "player1@example.com",
             Password = "password123"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task PlayerLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "", // Invalid - empty email
             Password = "Player123!"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
     public async Task AgentLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "agent@customerservice.com",
             Password = "" // Invalid - empty password
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
     public async Task PlayerLogin_WithNonExistentUser_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "nonexistent@example.com",
             Password = "SomePassword123!"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
     [Fact]
     public async Task AgentLogin_WithNonExistentUser_ReturnsUnauthorized()
     {
-        // Arrange
         var loginRequest = new LoginRequestDto
         {
             Email = "nonexistent@example.com",
             Password = "SomePassword123!"
         };
 
-        // Act
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
-        // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 }

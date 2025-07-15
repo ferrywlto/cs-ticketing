@@ -23,25 +23,21 @@ public class Mapper : IMapper
 
     public PlayerDto MapToDto(Player player)
     {
-        return new PlayerDto
-        {
-            Id = player.Id,
-            Email = player.Email,
-            Name = player.Name,
-            Avatar = player.Avatar,
-            PlayerNumber = player.PlayerNumber
-        };
+        return new PlayerDto(
+            player.Id,
+            player.Email,
+            player.Name,
+            player.PlayerNumber,
+            player.Avatar);
     }
 
     public AgentDto MapToDto(Agent agent)
     {
-        return new AgentDto
-        {
-            Id = agent.Id,
-            Email = agent.Email,
-            Name = agent.Name,
-            Avatar = agent.Avatar
-        };
+        return new AgentDto(
+            agent.Id,
+            agent.Email,
+            agent.Name,
+            agent.Avatar);
     }
 
     public Player MapToDomain(CreatePlayerDto dto)
@@ -70,46 +66,40 @@ public class Mapper : IMapper
     // Ticket mappings
     public TicketDto MapToDto(Ticket ticket)
     {
-        return new TicketDto
-        {
-            Id = ticket.Id,
-            Title = ticket.Title,
-            Description = ticket.Description,
-            Creator = MapToDto(ticket.Creator),
-            Status = ticket.Status.ToString(),
-            CreatedDate = ticket.CreatedDate,
-            LastUpdateDate = ticket.LastUpdateDate,
-            ResolvedDate = ticket.ResolvedDate,
-            Messages = ticket.Messages.Select(MapToDto).ToList()
-        };
+        return new TicketDto(
+            ticket.Id,
+            ticket.Title,
+            ticket.Description,
+            MapToDto(ticket.Creator),
+            ticket.Status.ToString(),
+            ticket.CreatedDate,
+            ticket.LastUpdateDate,
+            ticket.ResolvedDate,
+            ticket.Messages.Select(MapToDto).ToList());
     }
 
     public TicketSummaryDto MapToSummaryDto(Ticket ticket)
     {
-        return new TicketSummaryDto
-        {
-            Id = ticket.Id,
-            Title = ticket.Title,
-            Description = ticket.Description.Length > 100 
+        return new TicketSummaryDto(
+            ticket.Id,
+            ticket.Title,
+            ticket.Description.Length > 100 
                 ? ticket.Description[..100] + "..." 
                 : ticket.Description,
-            Creator = MapToDto(ticket.Creator),
-            Status = ticket.Status.ToString(),
-            CreatedDate = ticket.CreatedDate,
-            LastUpdateDate = ticket.LastUpdateDate,
-            MessageCount = ticket.Messages.Count
-        };
+            MapToDto(ticket.Creator),
+            ticket.Status.ToString(),
+            ticket.CreatedDate,
+            ticket.LastUpdateDate,
+            ticket.Messages.Count);
     }
 
     // Reply mappings
     public ReplyDto MapToDto(Reply reply)
     {
-        return new ReplyDto
-        {
-            Id = reply.Id,
-            Content = reply.Content,
-            Author = MapToDto(reply.Author),
-            CreatedDate = reply.CreatedDate
-        };
+        return new ReplyDto(
+            reply.Id,
+            reply.Content,
+            MapToDto(reply.Author),
+            reply.CreatedDate);
     }
 }
