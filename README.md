@@ -158,7 +158,44 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.9.0 (Current) - EF Core Infrastructure & Repository Pattern Completion
+### Version 1.10.0 (Current) - App State Management & Functional Authentication
+- **CustomerServiceApp.Web v1.3.0**: Complete Redux-pattern state management and functional sign-in implementation
+
+#### 🚀 **NEW FEATURES**:
+- **Redux-Pattern App State Management**:
+  - `AppState` record with immutable application state (user, tickets, loading states, messages)
+  - `AppStateStore` singleton with centralized state management and event-driven updates
+  - Complete dispatch/mutation pattern for state changes (login, logout, ticket operations)
+  - Type-safe state queries with computed properties (IsAuthenticated, IsPlayer, IsAgent)
+
+- **Functional Authentication Pages**:
+  - `PlayerLogin.razor` with form validation, error handling, and JWT authentication
+  - `AgentLogin.razor` with role-specific styling and agent authentication
+  - `LoginModel` for mutable form binding with DTO conversion
+  - Real-time form validation using DataAnnotations and EditForm components
+  - Loading states with spinner indicators and disabled controls during authentication
+
+- **HTTP Client Integration**:
+  - `ApiService` for structured API communication with JSON serialization
+  - JWT token management with authorization header configuration
+  - Error handling and null-safe API responses
+  - Support for all authentication and ticket operations
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Clean Architecture Compliance**: Services registered in DI container following SOLID principles
+- **State Management**: Immutable state with event-driven updates and proper component lifecycle management
+- **Form Handling**: Blazor EditForm with validation, error display, and user feedback
+- **Navigation**: Role-based redirection after successful authentication
+- **Error Handling**: Comprehensive try-catch with user-friendly error messages
+
+#### 🎨 **UI/UX ENHANCEMENTS**:
+- Modern form styling with Bootstrap cards and validation feedback
+- Loading indicators with disabled states during operations
+- Demo user credentials displayed for easy testing
+- Responsive design with proper mobile support
+- Role-specific color schemes (primary for players, success for agents)
+
+### Version 1.9.0 - EF Core Infrastructure & Repository Pattern Completion
 - **CustomerServiceApp.API v1.7.0**: Enhanced ticket reply functionality with proper EF Core integration
 - **CustomerServiceApp.Application v1.9.0**: Comprehensive reply handling with balanced domain/repository approach
 - **CustomerServiceApp.Infrastructure v1.5.0**: Complete repository pattern implementation with Reply repository
