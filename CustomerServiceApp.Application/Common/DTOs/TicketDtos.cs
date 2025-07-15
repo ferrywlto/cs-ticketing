@@ -17,6 +17,7 @@ public record TicketDto(
     DateTime CreatedDate = default,
     DateTime LastUpdateDate = default,
     DateTime? ResolvedDate = null,
+    AgentDto? ResolvedBy = null,
     IEnumerable<ReplyDto>? Messages = null)
 {
     public IEnumerable<ReplyDto> Messages { get; init; } = Messages ?? new List<ReplyDto>();

@@ -75,6 +75,7 @@ public class Mapper : IMapper
             ticket.CreatedDate,
             ticket.LastUpdateDate,
             ticket.ResolvedDate,
+            ticket.ResolvedBy != null ? MapToDto(ticket.ResolvedBy) : null,
             ticket.Messages.Select(MapToDto).ToList());
     }
 

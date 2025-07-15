@@ -42,5 +42,5 @@ public interface ITicketService
     /// <summary>
     /// Resolves a ticket - only from InResolution status
     /// </summary>
-    Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId);
+    Task<Result<TicketDto>> ResolveTicketAsync(Guid ticketId, Guid agentId);
 }

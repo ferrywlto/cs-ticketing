@@ -2,9 +2,11 @@ using CustomerServiceApp.API.Controllers;
 using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Application.Common.Models;
 using CustomerServiceApp.Application.Tickets;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using System.Security.Claims;
 
 namespace CustomerServiceApp.UnitTests.API.Controllers;
 
@@ -200,6 +202,29 @@ public class TicketsControllerTests
     public async Task ResolveTicket_WithValidTicket_ReturnsOk()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+
+        // Setup JWT claims for agent
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var resolvedByAgent = new AgentDto(
+            agentId,
+            "agent@example.com",
+            "Test Agent");
 
         var ticketDto = new TicketDto(
             ticketId,
@@ -214,10 +239,10 @@ public class TicketsControllerTests
             DateTime.UtcNow,
             DateTime.UtcNow,
             DateTime.UtcNow,
-            null);
+            resolvedByAgent);
 
         var result = Result<TicketDto>.Success(ticketDto);
-        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId, agentId))
                          .ReturnsAsync(result);
 
         var response = await _controller.ResolveTicket(ticketId);
@@ -226,15 +251,34 @@ public class TicketsControllerTests
         var returnedTicket = Assert.IsType<TicketDto>(okResult.Value);
         Assert.Equal(ticketId, returnedTicket.Id);
         Assert.Equal("Resolved", returnedTicket.Status);
+        Assert.Equal(agentId, returnedTicket.ResolvedBy?.Id);
     }
 
     [Fact]
     public async Task ResolveTicket_WithTicketNotInResolution_ReturnsBadRequest()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+
+        // Setup JWT claims for agent
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var result = Result<TicketDto>.Failure("Can only resolve tickets that are in resolution status");
-        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId, agentId))
                          .ReturnsAsync(result);
 
         var response = await _controller.ResolveTicket(ticketId);
@@ -608,6 +652,29 @@ public class TicketsControllerTests
     public async Task ResolveTicket_LogsInformation()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+
+        // Setup JWT claims for agent
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var resolvedByAgent = new AgentDto(
+            agentId,
+            "agent@example.com",
+            "Test Agent");
 
         var ticketDto = new TicketDto(
             ticketId,
@@ -622,10 +689,10 @@ public class TicketsControllerTests
             DateTime.UtcNow,
             DateTime.UtcNow,
             DateTime.UtcNow,
-            null);
+            resolvedByAgent);
 
         var result = Result<TicketDto>.Success(ticketDto);
-        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId, agentId))
                          .ReturnsAsync(result);
 
         await _controller.ResolveTicket(ticketId);
@@ -645,7 +712,7 @@ public class TicketsControllerTests
             x => x.Log(
                 LogLevel.Information,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully resolved ticket")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Successfully resolved ticket") && v.ToString()!.Contains("by agent")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
@@ -655,9 +722,27 @@ public class TicketsControllerTests
     public async Task ResolveTicket_WithTicketNotInResolution_LogsWarning()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+
+        // Setup JWT claims for agent
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var result = Result<TicketDto>.Failure("Can only resolve tickets that are in resolution status");
-        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId))
+        _mockTicketService.Setup(s => s.ResolveTicketAsync(ticketId, agentId))
                          .ReturnsAsync(result);
 
         await _controller.ResolveTicket(ticketId);
@@ -667,10 +752,37 @@ public class TicketsControllerTests
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to resolve ticket")),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to resolve ticket") && v.ToString()!.Contains("by agent")),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ResolveTicket_WithInvalidAgentClaims_ReturnsBadRequest()
+    {
+        var ticketId = Guid.NewGuid();
+
+        // Setup JWT claims without NameIdentifier (invalid agent ID)
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var response = await _controller.ResolveTicket(ticketId);
+
+        var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
+        Assert.Equal("Invalid agent authentication", badRequestResult.Value);
     }
 
     [Fact]

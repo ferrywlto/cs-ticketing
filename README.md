@@ -39,16 +39,19 @@ TBD
     3. Ticket - Initiated by a player of what happened. 
     4. Reply - Initiated by either a player or an agent.
 - Each Reply contains:
+    - Id - unique identifier of a reply
     - What - The message content
     - Who - A player / an agent
     - When - The time
-- Each player and agent is a person that:
-    - Has an email as identifier.
+- Each player and agent is a user that:
+    - Has an Id - unique identifier
+    - Has an email as user name
     - Has a name
     - Has an avatar in blob url format
     - Has password hash
     - Player has an additional field: player number
 - Each ticket contains:
+    - Id - unique identifier 
     - Creator - Player
     - Status - from ["Open", "In Resolution", "Resolved"], the initial status is open. When ever an agent replies the ticket status will change to in resolution if it is in open status. When an agent click resolve, and the ticket is in resolution status, it will change to resolved.
     - Title - Ticket title
@@ -56,6 +59,7 @@ TBD
     - CreatedDate - The timestamp that the thread created.
     - LastUpdateDate - The timestamp that the thread created, the last message created in that thread or when the ticket is resolved.
     - Messages - A list of messages from both player and agents, sort by message date in ascending order.
+    - ResolvedBy - The agent who resolved the ticket
 
 ## Assumptions
 - Once a message is send, it cannot be edited for integrity.

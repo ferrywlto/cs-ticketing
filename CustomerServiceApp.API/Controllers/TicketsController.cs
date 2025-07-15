@@ -2,6 +2,7 @@ using CustomerServiceApp.API.Authorization;
 using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Application.Tickets;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace CustomerServiceApp.API.Controllers;
 
@@ -129,16 +130,24 @@ public class TicketsController : ControllerBase
     {
         _logger.LogInformation("Resolving ticket {TicketId}", id);
         
-        var result = await _ticketService.ResolveTicketAsync(id);
+        // Extract agent ID from JWT token claims
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var agentId))
+        {
+            _logger.LogWarning("Failed to extract agent ID from token for ticket resolution");
+            return BadRequest("Invalid agent authentication");
+        }
+        
+        var result = await _ticketService.ResolveTicketAsync(id, agentId);
         
         if (result.IsSuccess)
         {
-            _logger.LogInformation("Successfully resolved ticket {TicketId}", id);
+            _logger.LogInformation("Successfully resolved ticket {TicketId} by agent {AgentId}", id, agentId);
             return Ok(result.Data);
         }
         
-        _logger.LogWarning("Failed to resolve ticket {TicketId}. Error: {Error}", 
-            id, result.Error);
+        _logger.LogWarning("Failed to resolve ticket {TicketId} by agent {AgentId}. Error: {Error}", 
+            id, agentId, result.Error);
         return BadRequest(result.Error);
     }
 }

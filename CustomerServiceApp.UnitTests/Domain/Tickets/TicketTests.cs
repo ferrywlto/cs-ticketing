@@ -188,12 +188,13 @@ public class TicketTests
         ticket.AddReply(agentReply);
 
         var beforeResolve = DateTime.UtcNow;
-        ticket.Resolve();
+        ticket.Resolve(_testAgent);
 
         Assert.Equal(TicketStatus.Resolved, ticket.Status);
         Assert.True(ticket.ResolvedDate.HasValue);
         Assert.True(ticket.ResolvedDate.Value >= beforeResolve);
         Assert.True(ticket.LastUpdateDate >= beforeResolve);
+        Assert.Equal(_testAgent, ticket.ResolvedBy);
     }
 
     [Fact]
@@ -206,7 +207,7 @@ public class TicketTests
             Creator = _testPlayer
         };
 
-        Assert.Throws<InvalidOperationException>(() => ticket.Resolve());
+        Assert.Throws<InvalidOperationException>(() => ticket.Resolve(_testAgent));
     }
 
     [Fact]
@@ -226,7 +227,7 @@ public class TicketTests
             Author = _testAgent
         };
         ticket.AddReply(agentReply);
-        ticket.Resolve();
+        ticket.Resolve(_testAgent);
 
         var newReply = new Reply
         {
