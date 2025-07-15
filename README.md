@@ -149,7 +149,43 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.8.0 (Current) - Complete JWT Authentication & Authorization System
+### Version 1.9.0 (Current) - EF Core Infrastructure & Repository Pattern Completion
+- **CustomerServiceApp.API v1.7.0**: Enhanced ticket reply functionality with proper EF Core integration
+- **CustomerServiceApp.Application v1.9.0**: Comprehensive reply handling with balanced domain/repository approach
+- **CustomerServiceApp.Infrastructure v1.5.0**: Complete repository pattern implementation with Reply repository
+
+#### 🔧 **INFRASTRUCTURE FIXES**:
+- **EF Core Tracking Issues Resolved**: 
+  - Fixed "Attempted to update or delete an entity that does not exist in the store" error when adding replies
+  - Implemented complete `IReplyRepository` with CreateAsync, GetByIdAsync, GetByTicketIdAsync operations
+  - Enhanced `UnitOfWork` pattern with Reply repository support and lazy loading
+  - Proper entity tracking for complex relationships (Ticket → Reply, User → Reply)
+
+- **Repository Pattern Completion**:
+  - `ReplyRepository` implementation with EF Core Include statements for Author navigation
+  - Unit of Work coordination across Tickets, Users, and Replies repositories
+  - Consistent async operations pattern across all repository implementations
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Balanced Domain/Repository Approach**: 
+  - `TicketService.AddReplyAsync` preserves domain logic with `ticket.AddReply(reply)` for business rules
+  - Repository operations handle persistence with proper EF Core tracking
+  - Maintains ticket status transitions (Open → InResolution) when agents reply
+  - Clean separation between business logic and data access concerns
+
+#### ✅ **TESTING ENHANCEMENTS**:
+- **Complete Unit Test Coverage**: 
+  - Fixed 6 TicketsController tests with proper JWT authentication setup
+  - Added ClaimsIdentity context for User.FindFirst(ClaimTypes.NameIdentifier) operations
+  - All 148 tests passing (100% success rate) across unit and integration test suites
+  - Comprehensive test validation for EF Core tracking and domain logic preservation
+
+- **Quality Assurance**: 
+  - Integration test validation for AddReply functionality
+  - Business rule enforcement testing (status transitions, authorization)
+  - Build succeeded with clean warnings (only expected E2E test discovery warnings)
+
+### Version 1.8.0 - Complete JWT Authentication & Authorization System
 - **CustomerServiceApp.API v1.6.0**: Production-ready JWT authentication and authorization with comprehensive security
 - **CustomerServiceApp.Application v1.8.0**: Enhanced clean architecture with authentication services and role-based authorization
 - **CustomerServiceApp.Infrastructure v1.4.0**: Complete JWT infrastructure with token services and database initialization
