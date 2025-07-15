@@ -3,6 +3,7 @@ using CustomerServiceApp.Web.Services;
 using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Common.DTOs;
 using Microsoft.JSInterop;
+using Microsoft.Extensions.Logging;
 using Xunit;
 using Moq;
 using System.Text.Json;
@@ -13,13 +14,15 @@ public class AppStateStoreWithLocalStorageTests
 {
     private readonly Mock<IJSRuntime> _mockJSRuntime;
     private readonly Mock<ILocalStorageService> _mockLocalStorageService;
+    private readonly Mock<ILogger<AppStateStore>> _mockLogger;
     private readonly AppStateStore _appStateStore;
 
     public AppStateStoreWithLocalStorageTests()
     {
         _mockJSRuntime = new Mock<IJSRuntime>();
         _mockLocalStorageService = new Mock<ILocalStorageService>();
-        _appStateStore = new AppStateStore(_mockLocalStorageService.Object);
+        _mockLogger = new Mock<ILogger<AppStateStore>>();
+        _appStateStore = new AppStateStore(_mockLocalStorageService.Object, _mockLogger.Object);
     }
 
     [Fact]
@@ -163,5 +166,90 @@ public class AppStateStoreWithLocalStorageTests
         Assert.Null(state.CurrentUser);
         Assert.Null(state.Token);
         Assert.False(state.IsAuthenticated);
+    }
+
+    [Fact]
+    public async Task PersistStateAsync_WithStorageException_ShouldLogError()
+    {
+        // Arrange
+        var playerId = Guid.NewGuid();
+        var playerDto = new PlayerDto(
+            playerId,
+            "test@example.com",
+            "Test Player",
+            "PLAYER001"
+        );
+        
+        var authResult = new AuthenticationResultDto(
+            playerDto,
+            "test-token",
+            DateTime.UtcNow.AddHours(1)
+        );
+
+        _mockLocalStorageService
+            .Setup(x => x.SetItemAsync(It.IsAny<string>(), It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Storage quota exceeded"));
+
+        // Act
+        _appStateStore.DispatchLogin(authResult);
+        
+        // Allow async operation to complete
+        await Task.Delay(100);
+
+        // Assert
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to persist state to local storage")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task LoadStateFromLocalStorageAsync_WithInvalidJson_ShouldLogWarning()
+    {
+        // Arrange
+        _mockLocalStorageService.Setup(x => x.GetItemAsync("app-state"))
+            .ReturnsAsync("invalid-json");
+
+        // Act
+        await _appStateStore.LoadStateFromLocalStorageAsync();
+
+        // Assert
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to deserialize state from local storage")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ClearPersistedStateAsync_WithStorageException_ShouldLogError()
+    {
+        // Arrange
+        _mockLocalStorageService
+            .Setup(x => x.RemoveItemAsync(It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Storage unavailable"));
+
+        // Act
+        _appStateStore.DispatchLogout();
+        
+        // Allow async operation to complete
+        await Task.Delay(100);
+
+        // Assert
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Failed to clear persisted state from local storage")),
+                It.IsAny<Exception>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
     }
 }

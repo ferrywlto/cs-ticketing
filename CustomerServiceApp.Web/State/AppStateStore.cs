@@ -1,6 +1,7 @@
 using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Web.Services;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace CustomerServiceApp.Web.State;
@@ -13,11 +14,13 @@ public class AppStateStore
     private AppState _state = new();
     private readonly object _lock = new();
     private readonly ILocalStorageService? _localStorageService;
+    private readonly ILogger<AppStateStore>? _logger;
     private const string StorageKey = "app-state";
 
-    public AppStateStore(ILocalStorageService? localStorageService = null)
+    public AppStateStore(ILocalStorageService? localStorageService = null, ILogger<AppStateStore>? logger = null)
     {
         _localStorageService = localStorageService;
+        _logger = logger;
     }
 
     /// <summary>
@@ -259,14 +262,16 @@ public class AppStateStore
             }
             NotifyStateChanged();
         }
-        catch (JsonException)
+        catch (JsonException ex)
         {
             // Invalid JSON in storage, ignore and continue with default state
+            _logger?.LogWarning(ex, "Failed to deserialize state from local storage. Invalid JSON format detected. Clearing corrupted state.");
             await ClearPersistedStateAsync();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Any other exception, ignore and continue with default state
+            _logger?.LogWarning(ex, "Unexpected error occurred while loading state from local storage. Continuing with default state.");
         }
     }
 
@@ -291,9 +296,10 @@ public class AppStateStore
             var serializedState = JsonSerializer.Serialize(stateToPersist);
             await _localStorageService.SetItemAsync(StorageKey, serializedState);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fail silently to avoid breaking the application
+            // Fail silently to avoid breaking the application but log the error
+            _logger?.LogWarning(ex, "Failed to persist state to local storage. Storage may be unavailable or quota exceeded.");
         }
     }
 
@@ -309,9 +315,10 @@ public class AppStateStore
         {
             await _localStorageService.RemoveItemAsync(StorageKey);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Fail silently to avoid breaking the application
+            // Fail silently to avoid breaking the application but log the error
+            _logger?.LogWarning(ex, "Failed to clear persisted state from local storage. Storage may be unavailable.");
         }
     }
 }

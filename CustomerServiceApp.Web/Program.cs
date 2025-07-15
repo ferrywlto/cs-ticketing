@@ -13,7 +13,9 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https:/
 
 // Register application services
 builder.Services.AddSingleton<AppStateStore>(provider => 
-    new AppStateStore(provider.GetService<ILocalStorageService>()));
+    new AppStateStore(
+        provider.GetService<ILocalStorageService>(),
+        provider.GetService<ILogger<AppStateStore>>()));
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<ApiService>();
 
