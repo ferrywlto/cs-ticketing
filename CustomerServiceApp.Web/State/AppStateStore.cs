@@ -13,11 +13,11 @@ public class AppStateStore
 {
     private AppState _state = new();
     private readonly object _lock = new();
-    private readonly ILocalStorageService? _localStorageService;
-    private readonly ILogger<AppStateStore>? _logger;
+    private readonly ILocalStorageService _localStorageService;
+    private readonly ILogger<AppStateStore> _logger;
     private const string StorageKey = "app-state";
 
-    public AppStateStore(ILocalStorageService? localStorageService = null, ILogger<AppStateStore>? logger = null)
+    public AppStateStore(ILocalStorageService localStorageService, ILogger<AppStateStore> logger)
     {
         _localStorageService = localStorageService;
         _logger = logger;

@@ -14,7 +14,17 @@ public class PlayerTicketsTests : TestContext
     {
         // Register required services
         Services.AddLogging();
+        Services.AddSingleton<ILocalStorageService, MockLocalStorageService>();
         Services.AddSingleton<AppStateStore>();
+    }
+
+    // Simple mock implementation for testing
+    public class MockLocalStorageService : ILocalStorageService
+    {
+        public Task<string?> GetItemAsync(string key) => Task.FromResult<string?>(null);
+        public Task SetItemAsync(string key, string value) => Task.CompletedTask;
+        public Task RemoveItemAsync(string key) => Task.CompletedTask;
+        public Task ClearAsync() => Task.CompletedTask;
     }
 
     [Fact]

@@ -1,5 +1,6 @@
 using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Common.DTOs;
+using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -13,10 +14,12 @@ public class ApiService
 {
     private readonly HttpClient _httpClient;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly ILogger<ApiService> _logger;
 
-    public ApiService(HttpClient httpClient)
+    public ApiService(HttpClient httpClient, ILogger<ApiService> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -92,8 +95,9 @@ public class ApiService
 
             return [];
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get tickets from API");
             return new List<TicketDto>().AsReadOnly();
         }
     }
@@ -116,8 +120,9 @@ public class ApiService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to get ticket {TicketId} from API", ticketId);
             return null;
         }
     }
@@ -140,8 +145,9 @@ public class ApiService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to create ticket with title '{Title}' via API", createTicketDto.Title);
             return null;
         }
     }
@@ -165,8 +171,9 @@ public class ApiService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to add reply to ticket {TicketId} via API", ticketId);
             return null;
         }
     }
@@ -189,8 +196,9 @@ public class ApiService
 
             return null;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to resolve ticket {TicketId} via API", ticketId);
             return null;
         }
     }
