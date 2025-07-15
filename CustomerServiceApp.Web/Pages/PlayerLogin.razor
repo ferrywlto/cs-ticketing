@@ -1,5 +1,9 @@
 @page "/player/login"
 @layout TicketLayout
+@inject AppStateStore AppState
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <PageTitle>Customer Login</PageTitle>
 
@@ -12,26 +16,43 @@
                         <h3 class="text-center mb-0">Customer Login</h3>
                     </div>
                     <div class="card-body">
-                        <div class="alert alert-info">
-                            <h5>🚧 Under Construction</h5>
-                            <p class="mb-0">Customer authentication is being developed.</p>
-                        </div>
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="alert alert-danger">
+                                @errorMessage
+                            </div>
+                        }
                         
-                        <form>
+                        <EditForm Model="@loginModel" OnValidSubmit="@HandleLogin">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+                            
                             <div class="mb-3">
                                 <label for="player-email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="player-email" placeholder="Enter your email" disabled>
+                                <InputText @bind-Value="loginModel.Email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@isLoading" />
+                                <ValidationMessage For="@(() => loginModel.Email)" class="text-danger" />
                             </div>
                             <div class="mb-3">
                                 <label for="player-password" class="form-label">Password</label>
-                                <input type="password" class="form-control" id="player-password" placeholder="Enter your password" disabled>
+                                <InputText type="password" @bind-Value="loginModel.Password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@isLoading" />
+                                <ValidationMessage For="@(() => loginModel.Password)" class="text-danger" />
                             </div>
-                            <button type="submit" class="btn btn-primary w-100" disabled>Sign In</button>
-                        </form>
+                            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
+                                @if (isLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Signing In...</span>
+                                }
+                                else
+                                {
+                                    <span>Sign In</span>
+                                }
+                            </button>
+                        </EditForm>
                         
                         <div class="text-center mt-3">
                             <small class="text-muted">
-                                Demo: <a href="/player/tickets" class="text-decoration-none">Go to Player Tickets</a>
+                                Demo users: player1@example.com, player2@example.com, player3@example.com (password: password123)
                             </small>
                         </div>
                     </div>
@@ -40,3 +61,73 @@
         </div>
     </div>
 </div>
+
+@code {
+    private LoginModel loginModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    protected override void OnInitialized()
+    {
+        AppState.StateChanged += StateHasChanged;
+        
+        // Check if already authenticated and redirect
+        var state = AppState.GetState();
+        if (state.IsAuthenticated && state.IsPlayer)
+        {
+            Navigation.NavigateTo("/player/tickets", replace: true);
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            AppState.DispatchLoadingState(true);
+            
+            var result = await ApiService.PlayerLoginAsync(loginModel.ToDto());
+            
+            if (result != null)
+            {
+                // Verify the user is actually a player
+                if (result.User is not PlayerDto)
+                {
+                    errorMessage = "Invalid credentials or account type. Please use the correct login page.";
+                    AppState.DispatchError(errorMessage);
+                    return;
+                }
+
+                AppState.DispatchLogin(result);
+                ApiService.SetAuthorizationHeader(result.Token);
+                
+                // Navigate to player tickets
+                Navigation.NavigateTo("/player/tickets", replace: true);
+            }
+            else
+            {
+                errorMessage = "Invalid email or password. Please try again.";
+                AppState.DispatchError(errorMessage);
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+            AppState.DispatchError(errorMessage);
+        }
+        finally
+        {
+            isLoading = false;
+            AppState.DispatchLoadingState(false);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.StateChanged -= StateHasChanged;
+    }
+}
