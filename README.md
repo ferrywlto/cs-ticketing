@@ -158,12 +158,25 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.14.0 - Complete Async State Management Implementation
-- **CustomerServiceApp.Web v1.8.0**: Completed comprehensive async dispatch methods for ALL state operations
+### Version 1.15.0 - Enhanced Player Experience & Direct DTO Usage
+- **CustomerServiceApp.Web v1.10.0**: Added logout functionality and simplified authentication models
+- **CustomerServiceApp.IntegrationTests v1.1.0**: Enhanced test coverage for UI interactions
 - **CustomerServiceApp.Application v1.11.0**: Enhanced AppStateStore with comprehensive exception logging
 - **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality and logging
 
 #### 🚀 **NEW FEATURES**:
+- **Enhanced Player Interface**:
+  - Added logout button to player tickets page for easy session termination
+  - Logout button positioned left of "New ticket" button with clean responsive design
+  - One-click logout with automatic navigation back to player login page
+  - Proper state cleanup using `DispatchLogoutAsync()` for session management
+
+- **Simplified Authentication Architecture**:
+  - Eliminated unnecessary `LoginModel` wrapper class for cleaner code structure
+  - Direct `LoginRequestDto` usage in login forms with proper validation
+  - Removed redundant Models namespace and folder structure
+  - Maintained all validation attributes (`[Required]`, `[EmailAddress]`, `[MinLength]`) with Blazor forms
+
 - **Complete Async State Management**: 
   - ALL dispatch methods now async: `DispatchLoginAsync()`, `DispatchLogoutAsync()`, `DispatchLoadingStateAsync()`, `DispatchErrorAsync()`, `DispatchSuccessMessageAsync()`, `DispatchTicketsLoadedAsync()`, `DispatchSelectTicketAsync()`, `DispatchTicketCreatedAsync()`, `DispatchTicketUpdatedAsync()`, `DispatchClearMessagesAsync()`
   - Proper async/await patterns for all state persistence operations across all features
