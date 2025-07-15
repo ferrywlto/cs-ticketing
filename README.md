@@ -158,9 +158,10 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
-### Version 1.11.0 - Local Storage State Persistence
-- **CustomerServiceApp.Web v1.4.0**: Added local storage persistence for authentication state
-- **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality
+### Version 1.11.0 - Local Storage State Persistence with Comprehensive Logging
+- **CustomerServiceApp.Application v1.11.0**: Enhanced AppStateStore with comprehensive exception logging
+- **CustomerServiceApp.Web v1.5.0**: Updated dependency injection for logger integration
+- **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality and logging
 
 #### 🚀 **NEW FEATURES**:
 - **Local Storage Persistence**: 
@@ -169,15 +170,22 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Graceful error handling for storage failures and invalid data
   - Authorization header restoration for seamless API integration
 
+#### 🛡️ **OBSERVABILITY & LOGGING**:
+- **Comprehensive Exception Logging**: 
+  - Structured logging using `ILogger<AppStateStore>` for all storage operations
+  - Warning-level logs for JSON deserialization errors with detailed context
+  - Exception logging for storage access failures with descriptive messages
+  - Production-ready error handling with proper logging for debugging
+
 #### 🏗️ **INFRASTRUCTURE**:
 - **LocalStorageService**: JavaScript interop service for browser local storage access with error handling
-- **AppStateStore Enhancement**: Integrated local storage persistence with existing Redux pattern
+- **AppStateStore Enhancement**: Integrated local storage persistence with existing Redux pattern and logger dependency injection
 - **App Component Initialization**: State loading on application startup with API authorization setup
 
 #### 🧪 **TESTING**:
-- **Comprehensive Unit Tests**: 6 new test cases covering all local storage scenarios
-- **Mock-based Testing**: Proper mocking of IJSRuntime and ILocalStorageService for isolated testing
-- **Edge Case Coverage**: Token expiration, invalid data, and null data handling
+- **Comprehensive Unit Tests**: 9 total test cases covering all local storage scenarios including logging verification
+- **Mock-based Testing**: Proper mocking of IJSRuntime, ILocalStorageService, and ILogger for isolated testing
+- **Edge Case Coverage**: Token expiration, invalid data, null data handling, and exception logging validation
 
 ### Version 1.10.1 - Blazor Component Lifecycle Fixes
 - **CustomerServiceApp.Web v1.4.1**: Fixed production runtime errors with proper lifecycle management
