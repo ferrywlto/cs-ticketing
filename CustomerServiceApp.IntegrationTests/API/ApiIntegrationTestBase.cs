@@ -141,11 +141,7 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     /// </summary>
     protected async Task<string> AuthenticateAsPlayerAsync()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player1@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
         response.EnsureSuccessStatusCode();
@@ -162,11 +158,7 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     /// </summary>
     protected async Task<string> AuthenticateAsAgentAsync()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent1@example.com",
-            Password = "agentpass123"
-        };
+        var loginRequest = new LoginRequestDto("agent1@example.com", "agentpass123");
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
         response.EnsureSuccessStatusCode();
@@ -238,12 +230,11 @@ public abstract class ApiIntegrationTestBase : IClassFixture<WebApplicationFacto
     {
         await AuthenticateAsPlayerAsync();
 
-        var createTicketDto = new CreateTicketDto
-        {
-            CreatorId = new Guid("11111111-1111-1111-1111-111111111111"), // Player1 ID from seed data
-            Title = "Integration Test Ticket",
-            Description = "This is a test ticket created during integration testing."
-        };
+        var createTicketDto = new CreateTicketDto(
+            "Integration Test Ticket",
+            "This is a test ticket created during integration testing.",
+            new Guid("11111111-1111-1111-1111-111111111111") // Player1 ID from seed data
+        );
 
         var response = await PostAsync("/api/tickets", createTicketDto);
         response.EnsureSuccessStatusCode();

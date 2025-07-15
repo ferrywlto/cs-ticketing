@@ -13,11 +13,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithValidCredentials_ReturnsOkWithToken()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player1@example.com",
-            Password = "Player123!"
-        };
+        var loginRequest = new LoginRequestDto("player1@example.com", "Player123!");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
@@ -34,11 +30,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player1@example.com",
-            Password = "WrongPassword"
-        };
+        var loginRequest = new LoginRequestDto("player1@example.com", "WrongPassword");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
@@ -48,11 +40,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithAgentCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent1@example.com",
-            Password = "agentpass123"
-        };
+        var loginRequest = new LoginRequestDto("agent1@example.com", "agentpass123");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
@@ -62,11 +50,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithValidCredentials_ReturnsOkWithToken()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent1@example.com",
-            Password = "agentpass123"
-        };
+        var loginRequest = new LoginRequestDto("agent1@example.com", "agentpass123");
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
@@ -83,11 +67,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent1@example.com",
-            Password = "WrongPassword"
-        };
+        var loginRequest = new LoginRequestDto("agent1@example.com", "WrongPassword");
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
@@ -97,11 +77,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithPlayerCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player1@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
@@ -111,11 +87,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "", // Invalid - empty email
-            Password = "Player123!"
-        };
+        var loginRequest = new LoginRequestDto("", "Player123!"); // Invalid - empty email
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
@@ -125,11 +97,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent@customerservice.com",
-            Password = "" // Invalid - empty password
-        };
+        var loginRequest = new LoginRequestDto("agent@customerservice.com", ""); // Invalid - empty password
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 
@@ -139,11 +107,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task PlayerLogin_WithNonExistentUser_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "nonexistent@example.com",
-            Password = "SomePassword123!"
-        };
+        var loginRequest = new LoginRequestDto("nonexistent@example.com", "SomePassword123!");
 
         var response = await PostAsync("/api/authentication/player/login", loginRequest);
 
@@ -153,11 +117,7 @@ public class AuthenticationControllerIntegrationTests : ApiIntegrationTestBase
     [Fact]
     public async Task AgentLogin_WithNonExistentUser_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "nonexistent@example.com",
-            Password = "SomePassword123!"
-        };
+        var loginRequest = new LoginRequestDto("nonexistent@example.com", "SomePassword123!");
 
         var response = await PostAsync("/api/authentication/agent/login", loginRequest);
 

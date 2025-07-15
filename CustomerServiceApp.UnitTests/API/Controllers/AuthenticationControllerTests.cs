@@ -24,26 +24,20 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_WithValidPlayerCredentials_ReturnsOkWithToken()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "player@example.com",
+            "password123");
 
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Player",
+            "P001");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = playerDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            playerDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -61,25 +55,19 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_WithValidAgentCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "agent@example.com",
+            "password123");
 
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Agent"
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Agent");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = agentDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            agentDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -105,11 +93,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "invalid@example.com",
-            Password = "wrongpassword"
-        };
+        var loginRequest = new LoginRequestDto(
+            "invalid@example.com",
+            "wrongpassword");
 
         var result = Result<AuthenticationResultDto>.Failure("Invalid email or password");
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -135,11 +121,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_WithException_ReturnsInternalServerError()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "player@example.com",
+            "password123");
 
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
                                   .ThrowsAsync(new Exception("Database connection failed"));
@@ -163,11 +147,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "", // Invalid email
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "", // Invalid email
+            "password123");
 
         _controller.ModelState.AddModelError("Email", "Email is required.");
 
@@ -180,25 +162,19 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_WithValidAgentCredentials_ReturnsOkWithToken()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "agent@example.com",
+            "password123");
 
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Agent"
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Agent");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = agentDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            agentDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -216,26 +192,20 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_WithValidPlayerCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "player@example.com",
+            "password123");
 
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Player",
+            "P001");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = playerDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            playerDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -261,11 +231,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_WithInvalidCredentials_ReturnsUnauthorized()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "invalid@example.com",
-            Password = "wrongpassword"
-        };
+        var loginRequest = new LoginRequestDto(
+            "invalid@example.com",
+            "wrongpassword");
 
         var result = Result<AuthenticationResultDto>.Failure("Invalid email or password");
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -291,11 +259,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_WithException_ReturnsInternalServerError()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "agent@example.com",
+            "password123");
 
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
                                   .ThrowsAsync(new Exception("Database connection failed"));
@@ -319,11 +285,9 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_WithInvalidModelState_ReturnsBadRequest()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "invalid-email", // Invalid email format
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "invalid-email", // Invalid email format
+            "password123");
 
         _controller.ModelState.AddModelError("Email", "Invalid email format.");
 
@@ -336,26 +300,20 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task PlayerLogin_SuccessfulLogin_LogsInformation()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "player@example.com",
+            "password123");
 
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Player",
+            "P001");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = playerDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            playerDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))
@@ -377,25 +335,19 @@ public class AuthenticationControllerTests
     [Fact]
     public async Task AgentLogin_SuccessfulLogin_LogsInformation()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "agent@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "agent@example.com",
+            "password123");
 
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = loginRequest.Email,
-            Name = "Test Agent"
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            loginRequest.Email,
+            "Test Agent");
 
-        var authResult = new AuthenticationResultDto
-        {
-            User = agentDto,
-            Token = "jwt.token.here",
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
-        };
+        var authResult = new AuthenticationResultDto(
+            agentDto,
+            "jwt.token.here",
+            DateTime.UtcNow.AddHours(1));
 
         var result = Result<AuthenticationResultDto>.Success(authResult);
         _mockAuthenticationService.Setup(s => s.LoginAsync(loginRequest))

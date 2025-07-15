@@ -14,12 +14,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreateTicket_WithValidData_ReturnsCreated()
     {
         await AuthenticateAsPlayerAsync();
-        var createTicketDto = new CreateTicketDto
-        {
-            CreatorId = new Guid("11111111-1111-1111-1111-111111111111"), // Player1 ID from seed data
-            Title = "Integration Test Ticket",
-            Description = "This is a test ticket created during integration testing."
-        };
+        var createTicketDto = new CreateTicketDto(
+            "Integration Test Ticket",
+            "This is a test ticket created during integration testing.",
+            new Guid("11111111-1111-1111-1111-111111111111")); // Player1 ID from seed data
 
         var response = await PostAsync("/api/tickets", createTicketDto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -36,12 +34,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         ClearAuthentication();
-        var createTicketDto = new CreateTicketDto
-        {
-            CreatorId = new Guid("11111111-1111-1111-1111-111111111111"),
-            Title = "Test Ticket",
-            Description = "Test Description"
-        };
+        var createTicketDto = new CreateTicketDto(
+            "Test Ticket",
+            "Test Description",
+            new Guid("11111111-1111-1111-1111-111111111111"));
 
         var response = await PostAsync("/api/tickets", createTicketDto);
 
@@ -52,12 +48,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     public async Task CreateTicket_AsAgent_ReturnsForbidden()
     {
         await AuthenticateAsAgentAsync();
-        var createTicketDto = new CreateTicketDto
-        {
-            CreatorId = new Guid("11111111-1111-1111-1111-111111111111"),
-            Title = "Test Ticket",
-            Description = "Test Description"
-        };
+        var createTicketDto = new CreateTicketDto(
+            "Test Ticket",
+            "Test Description",
+            new Guid("11111111-1111-1111-1111-111111111111"));
 
         var response = await PostAsync("/api/tickets", createTicketDto);
 
@@ -189,12 +183,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         var ticket = await CreateSampleTicketAsync();
         await AuthenticateAsAgentAsync(); // Switch to agent to reply
 
-        var createReplyDto = new CreateReplyDto
-        {
-            TicketId = ticket.Id,
-            AuthorId = new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID from seed data
-            Content = "This is a reply from the agent."
-        };
+        var createReplyDto = new CreateReplyDto(
+            "This is a reply from the agent.",
+            new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID from seed data
+            ticket.Id);
 
 
         var response = await PostAsync($"/api/tickets/{ticket.Id}/replies", createReplyDto);
@@ -210,12 +202,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         await AuthenticateAsPlayerAsync();
         var invalidTicketId = Guid.NewGuid();
 
-        var createReplyDto = new CreateReplyDto
-        {
-            TicketId = invalidTicketId,
-            AuthorId = new Guid("11111111-1111-1111-1111-111111111111"),
-            Content = "This reply should fail."
-        };
+        var createReplyDto = new CreateReplyDto(
+            "This reply should fail.",
+            new Guid("11111111-1111-1111-1111-111111111111"),
+            invalidTicketId);
 
 
         var response = await PostAsync($"/api/tickets/{invalidTicketId}/replies", createReplyDto);
@@ -231,12 +221,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         ClearAuthentication();
         var ticketId = Guid.NewGuid();
 
-        var createReplyDto = new CreateReplyDto
-        {
-            TicketId = ticketId,
-            AuthorId = Guid.NewGuid(),
-            Content = "Unauthorized reply."
-        };
+        var createReplyDto = new CreateReplyDto(
+            "Unauthorized reply.",
+            Guid.NewGuid(),
+            ticketId);
 
 
         var response = await PostAsync($"/api/tickets/{ticketId}/replies", createReplyDto);
@@ -253,12 +241,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
         
         // First, add an agent reply to change status to "InResolution"
         await AuthenticateAsAgentAsync();
-        var createReplyDto = new CreateReplyDto
-        {
-            TicketId = ticket.Id,
-            AuthorId = new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID
-            Content = "Agent reply to move to InResolution status."
-        };
+        var createReplyDto = new CreateReplyDto(
+            "Agent reply to move to InResolution status.",
+            new Guid("22222222-2222-2222-2222-222222222222"), // Agent ID
+            ticket.Id);
         await PostAsync($"/api/tickets/{ticket.Id}/replies", createReplyDto);
 
 
@@ -314,12 +300,10 @@ public class TicketsControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsPlayerAsync();
-        var createTicketDto = new CreateTicketDto
-        {
-            CreatorId = new Guid("11111111-1111-1111-1111-111111111111"),
-            Title = "", // Invalid - empty title
-            Description = "Valid description"
-        };
+        var createTicketDto = new CreateTicketDto(
+            "", // Invalid - empty title
+            "Valid description",
+            new Guid("11111111-1111-1111-1111-111111111111"));
 
 
         var response = await PostAsync("/api/tickets", createTicketDto);

@@ -34,11 +34,9 @@ public class AuthenticationServiceTests
     [Fact]
     public async Task LoginAsync_WithValidCredentials_ReturnsSuccessWithToken()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "test@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto(
+            "test@example.com",
+            "password123");
 
         var player = new Player 
         { 
@@ -49,13 +47,11 @@ public class AuthenticationServiceTests
             PlayerNumber = "P001"
         };
 
-        var playerDto = new PlayerDto
-        {
-            Id = player.Id,
-            Email = loginRequest.Email,
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            player.Id,
+            loginRequest.Email,
+            "Test Player",
+            "P001");
 
         var token = "jwt.token.here";
         var mockUserRepository = new Mock<IUserRepository>();
@@ -81,11 +77,9 @@ public class AuthenticationServiceTests
     [Fact]
     public async Task LoginAsync_WithInvalidCredentials_ReturnsFailure()
     {
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "test@example.com",
-            Password = "wrongpassword"
-        };
+        var loginRequest = new LoginRequestDto(
+            "test@example.com",
+            "wrongpassword");
 
         var mockUserRepository = new Mock<IUserRepository>();
         _mockUnitOfWork.Setup(u => u.Users).Returns(mockUserRepository.Object);
@@ -111,13 +105,11 @@ public class AuthenticationServiceTests
             PlayerNumber = "P001"
         };
 
-        var playerDto = new PlayerDto
-        {
-            Id = userId,
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            userId,
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         // Create a real JWT token for testing
         var mockOptions = new Mock<IOptions<JwtTokenOptions>>();

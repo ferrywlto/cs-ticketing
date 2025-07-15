@@ -31,13 +31,11 @@ public class JwtTokenServiceTests
     [Fact]
     public void GenerateToken_WithValidPlayerDto_ReturnsValidJwtToken()
     {
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var token = _jwtTokenService.GenerateToken(playerDto);
 
@@ -49,12 +47,10 @@ public class JwtTokenServiceTests
     [Fact]
     public void GenerateToken_WithValidAgentDto_ReturnsValidJwtToken()
     {
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = "agent@example.com",
-            Name = "Test Agent"
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            "agent@example.com",
+            "Test Agent");
 
         var token = _jwtTokenService.GenerateToken(agentDto);
 
@@ -66,13 +62,11 @@ public class JwtTokenServiceTests
     [Fact]
     public void ValidateToken_WithValidToken_ReturnsJwtSecurityToken()
     {
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var token = _jwtTokenService.GenerateToken(playerDto);
         var jwtToken = _jwtTokenService.ValidateToken(token);
@@ -95,13 +89,11 @@ public class JwtTokenServiceTests
     [Fact]
     public void GetUserIdFromValidatedToken_WithValidJwtToken_ReturnsUserId()
     {
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var token = _jwtTokenService.GenerateToken(playerDto);
         var jwtToken = _jwtTokenService.ValidateToken(token);
@@ -114,13 +106,11 @@ public class JwtTokenServiceTests
     [Fact]
     public void GetUserIdFromToken_WithValidToken_ReturnsUserId()
     {
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var token = _jwtTokenService.GenerateToken(playerDto);
         var userId = _jwtTokenService.GetUserIdFromToken(token);

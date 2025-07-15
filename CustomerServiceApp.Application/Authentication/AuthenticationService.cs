@@ -41,12 +41,7 @@ public class AuthenticationService : IAuthenticationService
             var token = _jwtTokenService.GenerateToken(userDto);
             var expiresAt = DateTime.UtcNow.AddHours(1); // Default 1 hour expiry
 
-            var authResult = new AuthenticationResultDto
-            {
-                User = userDto,
-                Token = token,
-                ExpiresAt = expiresAt
-            };
+            var authResult = new AuthenticationResultDto(userDto, token, expiresAt);
 
             return Result<AuthenticationResultDto>.Success(authResult);
         }

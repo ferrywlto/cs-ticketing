@@ -15,13 +15,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "newplayer@example.com",
-            Name = "New Player",
-            Password = "Password123!",
-            PlayerNumber = "P999"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "newplayer@example.com",
+            "New Player",
+            null,
+            "Password123!",
+            "P999");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -41,13 +40,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsPlayerAsync();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "newplayer@example.com",
-            Name = "New Player",
-            Password = "Password123!",
-            PlayerNumber = "P999"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "newplayer@example.com",
+            "New Player",
+            null,
+            "Password123!",
+            "P999");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -61,13 +59,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         ClearAuthentication();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "newplayer@example.com",
-            Name = "New Player",
-            Password = "Password123!",
-            PlayerNumber = "P999"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "newplayer@example.com",
+            "New Player",
+            null,
+            "Password123!",
+            "P999");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -81,13 +78,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "player1@example.com", // This email already exists in seed data
-            Name = "Duplicate Player",
-            Password = "Password123!",
-            PlayerNumber = "P998"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "player1@example.com", // This email already exists in seed data
+            "Duplicate Player",
+            null,
+            "Password123!",
+            "P998");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -101,13 +97,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "invalid-email", // Invalid email format
-            Name = "Test Player",
-            Password = "Password123!",
-            PlayerNumber = "P997"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "invalid-email", // Invalid email format
+            "Test Player",
+            null,
+            "Password123!",
+            "P997");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -121,12 +116,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createAgentDto = new CreateAgentDto
-        {
-            Email = "newagent@customerservice.com",
-            Name = "New Agent",
-            Password = "Password123!"
-        };
+        var createAgentDto = new CreateAgentDto(
+            "newagent@customerservice.com",
+            "New Agent",
+            null,
+            "Password123!");
 
 
         var response = await PostAsync("/api/users/agents", createAgentDto);
@@ -145,12 +139,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsPlayerAsync();
-        var createAgentDto = new CreateAgentDto
-        {
-            Email = "newagent@customerservice.com",
-            Name = "New Agent",
-            Password = "Password123!"
-        };
+        var createAgentDto = new CreateAgentDto(
+            "newagent@customerservice.com",
+            "New Agent",
+            null,
+            "Password123!");
 
 
         var response = await PostAsync("/api/users/agents", createAgentDto);
@@ -164,12 +157,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         ClearAuthentication();
-        var createAgentDto = new CreateAgentDto
-        {
-            Email = "newagent@customerservice.com",
-            Name = "New Agent",
-            Password = "Password123!"
-        };
+        var createAgentDto = new CreateAgentDto(
+            "newagent@customerservice.com",
+            "New Agent",
+            null,
+            "Password123!");
 
 
         var response = await PostAsync("/api/users/agents", createAgentDto);
@@ -183,12 +175,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createAgentDto = new CreateAgentDto
-        {
-            Email = "agent@customerservice.com", // This email already exists in seed data
-            Name = "Duplicate Agent",
-            Password = "Password123!"
-        };
+        var createAgentDto = new CreateAgentDto(
+            "agent@customerservice.com", // This email already exists in seed data
+            "Duplicate Agent",
+            null,
+            "Password123!");
 
 
         var response = await PostAsync("/api/users/agents", createAgentDto);
@@ -248,13 +239,12 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createPlayerDto = new CreatePlayerDto
-        {
-            Email = "test@example.com",
-            Name = "", // Missing required name
-            Password = "Password123!",
-            PlayerNumber = "P996"
-        };
+        var createPlayerDto = new CreatePlayerDto(
+            "test@example.com",
+            "", // Missing required name
+            null,
+            "Password123!",
+            "P996");
 
 
         var response = await PostAsync("/api/users/players", createPlayerDto);
@@ -268,12 +258,11 @@ public class UsersControllerIntegrationTests : ApiIntegrationTestBase
     {
 
         await AuthenticateAsAgentAsync();
-        var createAgentDto = new CreateAgentDto
-        {
-            Email = "test@example.com",
-            Name = "Test Agent",
-            Password = "" // Missing required password
-        };
+        var createAgentDto = new CreateAgentDto(
+            "test@example.com",
+            "Test Agent",
+            null,
+            ""); // Missing required password
 
 
         var response = await PostAsync("/api/users/agents", createAgentDto);

@@ -46,11 +46,7 @@ public class AuthenticationDebugTests : ApiIntegrationTestBase
         using var scope = Factory.Services.CreateScope();
         var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
 
-        var loginRequest = new LoginRequestDto
-        {
-            Email = "player1@example.com",
-            Password = "password123"
-        };
+        var loginRequest = new LoginRequestDto("player1@example.com", "password123");
 
         var result = await authService.LoginAsync(loginRequest);
         

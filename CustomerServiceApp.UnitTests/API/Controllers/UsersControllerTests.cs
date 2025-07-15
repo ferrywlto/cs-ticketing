@@ -24,21 +24,18 @@ public class UsersControllerTests
     [Fact]
     public async Task CreatePlayer_WithValidDto_ReturnsCreatedResult()
     {
-        var createDto = new CreatePlayerDto
-        {
-            Email = "test@example.com",
-            Name = "Test Player",
-            Password = "password123",
-            PlayerNumber = "P001"
-        };
+        var createDto = new CreatePlayerDto(
+            "test@example.com",
+            "Test Player",
+            null,
+            "password123",
+            "P001");
 
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = createDto.Email,
-            Name = createDto.Name,
-            PlayerNumber = createDto.PlayerNumber
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            createDto.Email,
+            createDto.Name,
+            createDto.PlayerNumber);
 
         var result = Result<PlayerDto>.Success(playerDto);
         _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
@@ -55,13 +52,12 @@ public class UsersControllerTests
     [Fact]
     public async Task CreatePlayer_WithFailure_ReturnsBadRequest()
     {
-        var createDto = new CreatePlayerDto
-        {
-            Email = "test@example.com",
-            Name = "Test Player",
-            Password = "password123",
-            PlayerNumber = "P001"
-        };
+        var createDto = new CreatePlayerDto(
+            "test@example.com",
+            "Test Player",
+            null,
+            "password123",
+            "P001");
 
         var result = Result<PlayerDto>.Failure("Email already exists");
         _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
@@ -76,19 +72,16 @@ public class UsersControllerTests
     [Fact]
     public async Task CreateAgent_WithValidDto_ReturnsCreatedResult()
     {
-        var createDto = new CreateAgentDto
-        {
-            Email = "agent@example.com",
-            Name = "Test Agent",
-            Password = "password123"
-        };
+        var createDto = new CreateAgentDto(
+            "agent@example.com",
+            "Test Agent",
+            null,
+            "password123");
 
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = createDto.Email,
-            Name = createDto.Name
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            createDto.Email,
+            createDto.Name);
 
         var result = Result<AgentDto>.Success(agentDto);
         _mockUserService.Setup(s => s.CreateAgentAsync(createDto))
@@ -106,13 +99,11 @@ public class UsersControllerTests
     public async Task GetUser_WithExistingUser_ReturnsOk()
     {
         var userId = Guid.NewGuid();
-        var userDto = new PlayerDto
-        {
-            Id = userId,
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var userDto = new PlayerDto(
+            userId,
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var result = Result<UserDto>.Success(userDto);
         _mockUserService.Setup(s => s.GetUserByIdAsync(userId))
@@ -142,21 +133,18 @@ public class UsersControllerTests
     [Fact]
     public async Task CreatePlayer_LogsInformation()
     {
-        var createDto = new CreatePlayerDto
-        {
-            Email = "test@example.com",
-            Name = "Test Player",
-            Password = "password123",
-            PlayerNumber = "P001"
-        };
+        var createDto = new CreatePlayerDto(
+            "test@example.com",
+            "Test Player",
+            null,
+            "password123",
+            "P001");
 
-        var playerDto = new PlayerDto
-        {
-            Id = Guid.NewGuid(),
-            Email = createDto.Email,
-            Name = createDto.Name,
-            PlayerNumber = createDto.PlayerNumber
-        };
+        var playerDto = new PlayerDto(
+            Guid.NewGuid(),
+            createDto.Email,
+            createDto.Name,
+            createDto.PlayerNumber);
 
         var result = Result<PlayerDto>.Success(playerDto);
         _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
@@ -188,13 +176,12 @@ public class UsersControllerTests
     [Fact]
     public async Task CreatePlayer_WithFailure_LogsWarning()
     {
-        var createDto = new CreatePlayerDto
-        {
-            Email = "test@example.com",
-            Name = "Test Player",
-            Password = "password123",
-            PlayerNumber = "P001"
-        };
+        var createDto = new CreatePlayerDto(
+            "test@example.com",
+            "Test Player",
+            null,
+            "password123",
+            "P001");
 
         var result = Result<PlayerDto>.Failure("Email already exists");
         _mockUserService.Setup(s => s.CreatePlayerAsync(createDto))
@@ -216,19 +203,16 @@ public class UsersControllerTests
     [Fact]
     public async Task CreateAgent_LogsInformation()
     {
-        var createDto = new CreateAgentDto
-        {
-            Email = "agent@example.com",
-            Name = "Test Agent",
-            Password = "password123"
-        };
+        var createDto = new CreateAgentDto(
+            "agent@example.com",
+            "Test Agent",
+            null,
+            "password123");
 
-        var agentDto = new AgentDto
-        {
-            Id = Guid.NewGuid(),
-            Email = createDto.Email,
-            Name = createDto.Name
-        };
+        var agentDto = new AgentDto(
+            Guid.NewGuid(),
+            createDto.Email,
+            createDto.Name);
 
         var result = Result<AgentDto>.Success(agentDto);
         _mockUserService.Setup(s => s.CreateAgentAsync(createDto))
@@ -260,12 +244,11 @@ public class UsersControllerTests
     [Fact]
     public async Task CreateAgent_WithFailure_LogsWarning()
     {
-        var createDto = new CreateAgentDto
-        {
-            Email = "agent@example.com",
-            Name = "Test Agent",
-            Password = "password123"
-        };
+        var createDto = new CreateAgentDto(
+            "agent@example.com",
+            "Test Agent",
+            null,
+            "password123");
 
         var result = Result<AgentDto>.Failure("Email already exists");
         _mockUserService.Setup(s => s.CreateAgentAsync(createDto))
@@ -291,13 +274,11 @@ public class UsersControllerTests
     public async Task GetUser_LogsInformation()
     {
         var userId = Guid.NewGuid();
-        var userDto = new PlayerDto
-        {
-            Id = userId,
-            Email = "test@example.com",
-            Name = "Test Player",
-            PlayerNumber = "P001"
-        };
+        var userDto = new PlayerDto(
+            userId,
+            "test@example.com",
+            "Test Player",
+            "P001");
 
         var result = Result<UserDto>.Success(userDto);
         _mockUserService.Setup(s => s.GetUserByIdAsync(userId))
