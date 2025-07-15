@@ -102,6 +102,14 @@ TBD
 - We will use JWT with short exp for session management. 
 - We will use Redux style dispatch and mutate pattern for frontend state management.
 - We will use CDN Bootstrap styles for frontend UI styles for simplicity.
+- For front-end state management, create classes:
+  - AppState - An object to hold the application state, ideally in record type.
+  - AppStateStore - A centralized state management store in Redux approach.
+    - It holds an instance of AppState which is immutable from outside. 
+    - The app state can only be modified from the private mutation methods. 
+    - The store will expose public dispatch and query methods that will call the mutation methods.
+    - It always return a immutable copy of the app state when query.
+  - The AppStateStore is registered as a singleton in DI container, injected into pages. 
 
 ## Security Configuration
 
@@ -146,6 +154,7 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 - Caching mechanism to improve frequent reading tickets loading time.  
 - Using Signalr for ticket update notifications.
 - Paging mechanism for loading tickets and messages in a ticket thread.
+- Apply rate limit to APIs 
 
 ## Change Log
 
