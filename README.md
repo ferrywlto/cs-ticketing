@@ -158,6 +158,25 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.32.0 - TicketListItem Component Extraction
+- **CustomerServiceApp.Web v1.32.0**: Extracted reusable TicketListItem component for ticket list display
+
+#### 🚀 **NEW FEATURES**:
+- **TicketListItem Component**:
+  - Clean, reusable component for displaying ticket items in lists
+  - Accepts Ticket (TicketDto), IsSelected (bool), and OnTicketSelected (EventCallback) parameters
+  - Handles selection state with visual feedback (selected CSS class)
+  - Shows ticket title, status badge, creator info, and avatar
+  - Proper date formatting for creation and last update times
+  - Click handling with custom callback support
+  - Comprehensive unit test coverage (5 test scenarios)
+
+#### 🔧 **IMPROVEMENTS**:
+- **Code Reusability**: TicketListItem can now be shared across multiple pages
+- **Maintainability**: Centralized ticket item rendering logic
+- **Testing**: Full bUnit test coverage for component behavior
+- **Consistency**: Unified ticket item appearance across the application
+
 ### Version 1.31.0 - MessageCard Component Extraction
 - **CustomerServiceApp.Web v1.31.0**: Extracted reusable MessageCard component for message display
 
