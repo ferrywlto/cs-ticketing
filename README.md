@@ -158,6 +158,33 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.16.0 - Player-Specific API Integration & Enhanced Security
+- **CustomerServiceApp.Web v1.16.0**: Enhanced player experience with optimized ticket loading
+
+#### 🚀 **NEW FEATURES**:
+- **Player-Specific API Integration**:
+  - Added `GetPlayerTicketsAsync()` method to `ApiService` for player-specific ticket fetching
+  - Updated `PlayerTickets.razor` to use `/api/tickets/player/{playerId}` endpoint instead of generic tickets endpoint
+  - Enhanced security by ensuring players only fetch their own tickets at the API level
+  - Improved performance by reducing data transfer (TicketSummaryDto vs full TicketDto for list view)
+
+- **Smart Ticket Detail Loading**:
+  - List view loads lightweight `TicketSummaryDto` for optimal performance
+  - Detail view dynamically fetches full `TicketDto` with messages when ticket is selected
+  - Enhanced `SelectTicket()` method with proper loading states and error handling
+  - Seamless user experience with progressive data loading
+
+#### 🛡️ **SECURITY ENHANCEMENTS**:
+- **Player Authorization Validation**: Current user validation before API calls with automatic redirect to login if unauthenticated
+- **Role-Based Data Access**: Players now use dedicated player-specific endpoints enforcing server-side authorization
+- **Reduced Attack Surface**: Elimination of access to generic ticket endpoints from player interface
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **DTO Conversion Strategy**: Automatic conversion from TicketSummaryDto to TicketDto for AppState compatibility
+- **Progressive Loading Pattern**: List view for browsing, detail view for interaction - optimal data loading strategy
+- **Enhanced Error Handling**: Comprehensive error handling in both ticket list loading and detail fetching
+- **State Management**: Proper loading state management during ticket selection operations
+
 ### Version 1.15.0 - Enhanced Player Experience & Direct DTO Usage
 - **CustomerServiceApp.Web v1.10.0**: Added logout functionality and simplified authentication models
 - **CustomerServiceApp.IntegrationTests v1.1.0**: Enhanced test coverage for UI interactions
