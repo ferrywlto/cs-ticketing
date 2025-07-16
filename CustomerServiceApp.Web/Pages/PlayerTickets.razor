@@ -360,8 +360,33 @@
             // Close the modal
             showNewTicketModal = false;
             
-            // Add the newly created ticket to the list and select it
-            await AppState.DispatchTicketCreatedAsync(newTicket);
+            // Refresh the entire ticket list to ensure consistency
+            var currentUser = AppState.GetState()?.CurrentUser;
+            if (currentUser != null)
+            {
+                // Fetch fresh tickets from server
+                var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
+                
+                // Convert TicketSummaryDto to TicketDto for app state compatibility
+                var tickets = ticketSummaries.Select(summary => new TicketDto(
+                    summary.Id,
+                    summary.Title,
+                    summary.Description,
+                    summary.Creator,
+                    summary.Status,
+                    summary.CreatedDate,
+                    summary.LastUpdateDate,
+                    null, // ResolvedDate
+                    null, // ResolvedBy
+                    new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
+                )).ToList().AsReadOnly();
+                
+                // Store refreshed tickets in app state
+                await AppState.DispatchTicketsLoadedAsync(tickets);
+                
+                // Select the newly created ticket
+                await SelectTicket(newTicket.Id);
+            }
             
             Logger.LogInformation("Successfully created and selected new ticket {TicketId}", newTicket.Id);
         }
@@ -393,18 +418,16 @@
                     selectedTicket.Id);
                 
                 // Call API to add reply
-                var updatedTicket = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
+                var newReply = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
                 
-                // If API returned updated ticket, use it directly, otherwise fetch fresh data
-                if (updatedTicket != null)
+                // If API returned the new reply, refresh the selected ticket to get the latest data
+                if (newReply != null)
                 {
-                    await AppState.DispatchTicketUpdatedAsync(updatedTicket);
-                    
-                    // Clear reply text after successful update
+                    // Clear reply text after successful creation
                     replyText = "";
                     
-                    // Force UI re-render to show the new reply immediately
-                    StateHasChanged();
+                    // Reload the selected ticket to get the updated ticket with the new reply
+                    await SelectTicket(selectedTicket.Id);
                     
                     Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
                 }

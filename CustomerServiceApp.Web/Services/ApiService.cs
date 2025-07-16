@@ -183,8 +183,8 @@ public class ApiService
     /// </summary>
     /// <param name="ticketId">Ticket ID</param>
     /// <param name="createReplyDto">Reply data</param>
-    /// <returns>Updated ticket with the new reply</returns>
-    public async Task<TicketDto?> AddReplyAsync(Guid ticketId, CreateReplyDto createReplyDto)
+    /// <returns>The newly created reply</returns>
+    public async Task<ReplyDto?> AddReplyAsync(Guid ticketId, CreateReplyDto createReplyDto)
     {
         try
         {
@@ -192,7 +192,7 @@ public class ApiService
             
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<TicketDto>(_jsonOptions);
+                return await response.Content.ReadFromJsonAsync<ReplyDto>(_jsonOptions);
             }
 
             return null;
