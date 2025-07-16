@@ -73,7 +73,14 @@
                                         </div>
                                     </div>
                                     <div class="avatar-placeholder">
-                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                        @if (!string.IsNullOrEmpty(ticket.Creator.Avatar))
+                                        {
+                                            <img src="@ticket.Creator.Avatar" alt="@ticket.Creator.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -107,7 +114,14 @@
                                         <div>@selectedTicket.Creator.PlayerNumber • @selectedTicket.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
                                     </div>
                                     <div class="avatar-placeholder">
-                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                        @if (!string.IsNullOrEmpty(selectedTicket.Creator.Avatar))
+                                        {
+                                            <img src="@selectedTicket.Creator.Avatar" alt="@selectedTicket.Creator.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -133,7 +147,18 @@
                                                     </div>
                                                 </div>
                                                 <div class="avatar-placeholder ms-3">
-                                                    <i class="bi bi-@(isFromAgent ? "shield-fill" : "person-circle") fs-4 @(isFromAgent ? "text-success" : "text-primary")"></i>
+                                                    @if (isFromAgent)
+                                                    {
+                                                        <i class="bi bi-shield-fill fs-4 text-success"></i>
+                                                    }
+                                                    else if (!string.IsNullOrEmpty(message.Author.Avatar))
+                                                    {
+                                                        <img src="@message.Author.Avatar" alt="@message.Author.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                                    }
                                                 </div>
                                             </div>
                                         </div>
@@ -154,7 +179,17 @@
                     <div class="p-3 border-top">
                         <div class="d-flex align-items-start">
                             <div class="avatar-placeholder me-3">
-                                <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                @{
+                                    var currentUser = AppState.GetState().CurrentUser;
+                                }
+                                @if (!string.IsNullOrEmpty(currentUser?.Avatar))
+                                {
+                                    <img src="@currentUser.Avatar" alt="@currentUser.Name" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                }
                             </div>
                             <div class="flex-grow-1">
                                 <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText"></textarea>

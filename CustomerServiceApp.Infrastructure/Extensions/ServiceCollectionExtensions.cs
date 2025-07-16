@@ -133,51 +133,69 @@ public static class ServiceCollectionExtensions
         if (context.Users.Any())
             return;
 
+        const string devPassword = "password123"; // Development password
         // Create sample players
-        var player1 = new CustomerServiceApp.Domain.Users.Player
+        var player1 = new Domain.Users.Player()
         {
             Email = "player1@example.com",
             Name = "John Doe",
-            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
-            PlayerNumber = "P001"
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            PlayerNumber = "P001",
+            Avatar = "/img/player1.jpg"
         };
 
-        var player2 = new CustomerServiceApp.Domain.Users.Player
+        var player2 = new Domain.Users.Player
         {
             Email = "player2@example.com",
             Name = "Jane Smith",
-            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
-            PlayerNumber = "P002"
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            PlayerNumber = "P002",
+            Avatar = "/img/player2.jpg"
         };
 
-        var player3 = new CustomerServiceApp.Domain.Users.Player
+        var player3 = new Domain.Users.Player
         {
             Email = "player3@example.com",
             Name = "Bob Johnson",
-            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
-            PlayerNumber = "P003"
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            PlayerNumber = "P003",
         };
 
         // Create sample agent
-        var agent1 = new CustomerServiceApp.Domain.Users.Agent
+        var agent1 = new Domain.Users.Agent
         {
-            Email = "agent@customerservice.com",
+            Email = "agent1@example.com",
             Name = "CS Agent",
-            PasswordHash = passwordHasher.HashPassword("password123") // Development password
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            Avatar = "/img/agent1.jpg"
+        };
+        var agent2 = new Domain.Users.Agent
+        {
+            Email = "agent2@example.com",
+            Name = "CS Agent 2",
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            Avatar = "/img/agent2.jpg"
+        };
+        var agent3 = new Domain.Users.Agent
+        {
+            Email = "agent3@example.com",
+            Name = "CS Agent 3",
+            PasswordHash = passwordHasher.HashPassword(devPassword), // Development password
+            Avatar = "/img/agent3.jpg"
         };
 
-        context.Users.AddRange(player1, player2, player3, agent1);
+        context.Users.AddRange(player1, player2, player3, agent1, agent2, agent3);
         await context.SaveChangesAsync();
 
         // Create sample tickets
-        var ticket1 = new CustomerServiceApp.Domain.Tickets.Ticket
+        var ticket1 = new Domain.Tickets.Ticket
         {
             Title = "Login Issue",
             Description = "Cannot log into my account",
             Creator = player1
         };
 
-        var ticket2 = new CustomerServiceApp.Domain.Tickets.Ticket
+        var ticket2 = new Domain.Tickets.Ticket
         {
             Title = "Payment Problem",
             Description = "Payment not processing correctly",
@@ -188,14 +206,14 @@ public static class ServiceCollectionExtensions
         await context.SaveChangesAsync();
 
         // Add sample replies
-        var reply1 = new CustomerServiceApp.Domain.Tickets.Reply
+        var reply1 = new Domain.Tickets.Reply
         {
             Content = "We're looking into this issue. Can you provide more details?",
             Author = agent1,
             TicketId = ticket1.Id
         };
 
-        var reply2 = new CustomerServiceApp.Domain.Tickets.Reply
+        var reply2 = new Domain.Tickets.Reply
         {
             Content = "I tried resetting my password but it still doesn't work.",
             Author = player1,
