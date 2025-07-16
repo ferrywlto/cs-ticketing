@@ -1,0 +1,54 @@
+@using CustomerServiceApp.Application.Common.DTOs
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="ticket-list-item p-3 border-bottom @(IsSelected ? "selected" : "")" @onclick="OnTicketClick">
+    <div class="d-flex justify-content-between align-items-start">
+        <div class="flex-grow-1 me-3">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <h6 class="mb-0 text-truncate me-2">@Ticket.Title</h6>
+                <span class="badge @GetStatusBadgeClass(Ticket.Status)">@Ticket.Status</span>
+            </div>
+            <div class="small text-muted">
+                <div>@(Ticket.Creator?.Name ?? "Unknown")</div>
+                <div>@(Ticket.Creator?.PlayerNumber ?? "N/A") • Created: @Ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
+                <div class="text-primary"><i class="bi bi-clock"></i> Updated: @Ticket.LastUpdateDate.ToString("MMM dd, yyyy HH:mm")</div>
+            </div>
+        </div>
+        <div class="avatar-placeholder">
+            @if (!string.IsNullOrEmpty(Ticket.Creator?.Avatar))
+            {
+                <img src="@Ticket.Creator.Avatar" alt="@(Ticket.Creator?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+            }
+            else
+            {
+                <i class="bi bi-person-circle fs-4 text-primary"></i>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public TicketDto Ticket { get; set; } = null!;
+    [Parameter] public bool IsSelected { get; set; }
+    [Parameter] public EventCallback OnTicketSelected { get; set; }
+
+    private async Task OnTicketClick()
+    {
+        await OnTicketSelected.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Gets the CSS class for ticket status badge
+    /// </summary>
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Open" => "bg-success text-white",
+            "InResolution" => "bg-warning text-dark",
+            "Resolved" => "bg-primary text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
+}

@@ -2,6 +2,7 @@
 @layout TicketLayout
 @using CustomerServiceApp.Web.Services
 @using CustomerServiceApp.Web
+@using CustomerServiceApp.Web.Components
 @using CustomerServiceApp.Application.Tickets
 @using CustomerServiceApp.Application.Common.DTOs
 @using CustomerServiceApp.Domain.Tickets
@@ -12,8 +13,6 @@
 @inject ApiService ApiService
 @inject ILogger<PlayerTickets> Logger
 @implements IDisposable
-
-
 
 <div class="container-fluid h-100">
     <div class="row h-100">
@@ -63,32 +62,9 @@
                     {
                         @foreach (var ticket in TicketList)
                         {
-                            <div class="ticket-list-item p-3 border-bottom @(ticket.Id == selectedTicket?.Id ? "selected" : "")" 
-                                 @onclick="() => SelectTicket(ticket.Id)">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1 me-3">
-                                        <div class="d-flex justify-content-between align-items-center mb-1">
-                                            <h6 class="mb-0 text-truncate me-2">@ticket.Title</h6>
-                                            <span class="badge @GetStatusBadgeClass(ticket.Status)">@ticket.Status</span>
-                                        </div>
-                                        <div class="small text-muted">
-                                            <div>@(ticket.Creator?.Name ?? "Unknown")</div>
-                                            <div>@(ticket.Creator?.PlayerNumber ?? "N/A") • Created: @ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
-                                            <div class="text-primary"><i class="bi bi-clock"></i> Updated: @ticket.LastUpdateDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                        </div>
-                                    </div>
-                                    <div class="avatar-placeholder">
-                                        @if (!string.IsNullOrEmpty(ticket.Creator?.Avatar))
-                                        {
-                                            <img src="@ticket.Creator.Avatar" alt="@(ticket.Creator?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                        }
-                                        else
-                                        {
-                                            <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
+                            <TicketListItem Ticket="ticket" 
+                                          IsSelected="ticket.Id == selectedTicket?.Id" 
+                                          OnTicketSelected="() => SelectTicket(ticket.Id)" />
                         }
                     }
                 </div>
@@ -147,42 +123,7 @@
                             @foreach (var message in selectedTicket.Messages)
                             {
                                 var isFromAgent = message.Author?.UserType == "Agent";
-                                <div class="message-item mb-3">
-                                    <div class="card @(isFromAgent ? "border-success" : "border-primary")">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div class="flex-grow-1">
-                                                    <p class="card-text">@message.Content</p>
-                                                    <div class="small text-muted">
-                                                        <div>@(isFromAgent ? "CS Agent" : message.Author?.Name ?? "Unknown")</div>
-                                                        <div>@message.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                                    </div>
-                                                </div>
-                                                <div class="avatar-placeholder ms-3">
-                                                    @if (isFromAgent)
-                                                    {
-                                                        @if (!string.IsNullOrEmpty(message.Author?.Avatar))
-                                                        {
-                                                            <img src="@message.Author.Avatar" alt="@(message.Author?.Name ?? "CS Agent")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="bi bi-shield-fill fs-4 text-success"></i>
-                                                        }
-                                                    }
-                                                    else if (!string.IsNullOrEmpty(message.Author?.Avatar))
-                                                    {
-                                                        <img src="@message.Author.Avatar" alt="@(message.Author?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <MessageCard Message="message" IsFromAgent="isFromAgent" />
                             }
                         }
                         else
@@ -194,51 +135,7 @@
                         }
                     </div>
                     
-                    <!-- Reply Section -->
-                    @if (selectedTicket.Status != "Resolved")
-                    {
-                        <div class="p-3 border-top">
-                            <div class="d-flex align-items-start">
-                                <div class="avatar-placeholder me-3">
-                                    @{
-                                        var currentUser = AppState.GetState()?.CurrentUser;
-                                    }
-                                    @if (!string.IsNullOrEmpty(currentUser?.Avatar))
-                                    {
-                                        <img src="@currentUser.Avatar" alt="@(currentUser?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                    }
-                                    else
-                                    {
-                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                    }
-                                </div>
-                                <div class="flex-grow-1">
-                                    <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText" disabled="@(AppState.GetState()?.IsLoading ?? false)"></textarea>
-                                    <button class="btn btn-primary" @onclick="SendReply" disabled="@(string.IsNullOrWhiteSpace(replyText) || AppState.GetState()?.IsLoading == true)">
-                                        @if (AppState.GetState()?.IsLoading == true)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                            <span>Sending...</span>
-                                        }
-                                        else
-                                        {
-                                            <i class="bi bi-send"></i>
-                                            <span>Send</span>
-                                        }
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="p-3 border-top bg-light text-center">
-                            <div class="text-muted">
-                                <i class="bi bi-check-circle-fill text-success me-2"></i>
-                                This ticket has been resolved and is no longer accepting replies.
-                            </div>
-                        </div>
-                    }
+                    <MessageReplyInput OnReplyResult="OnReplyResult" />
                 </div>
             }
             else
@@ -259,21 +156,19 @@
 <NewTicketModal IsVisible="showNewTicketModal" 
                 OnClose="CloseNewTicketModal" 
                 OnTicketCreated="OnTicketCreated" />
-
 @code {
-    private string replyText = "";
     private bool isLoading = true;
     private string? errorMessage;
     private bool showNewTicketModal = false;
 
     // Get current player ID from app state
-    private string CurrentPlayerId => AppState.GetState()?.CurrentUser?.Id.ToString() ?? "";
+    private string CurrentPlayerId => CurrentState?.CurrentUser?.Id.ToString() ?? "";
 
     // Get tickets from app state (already sorted by app state)
-    private IReadOnlyList<TicketDto> TicketList => AppState.GetState()?.Tickets ?? new List<TicketDto>().AsReadOnly();
+    private IReadOnlyList<TicketDto> TicketList => CurrentState?.Tickets ?? new List<TicketDto>().AsReadOnly();
 
     // Get selected ticket from app state
-    private TicketDto? selectedTicket => AppState.GetState()?.SelectedTicket;
+    private TicketDto? selectedTicket => CurrentState?.SelectedTicket;
 
     /// <summary>
     /// Gets the CSS class for ticket status badge
@@ -287,6 +182,13 @@
             "Resolved" => "bg-primary text-white",
             _ => "bg-secondary text-white"
         };
+    }
+
+    private AppState? CurrentState { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        CurrentState = AppState.GetState();
     }
 
     protected override async Task OnInitializedAsync()
@@ -340,7 +242,7 @@
         try
         {
             // Check if the clicked ticket is already selected - if so, do nothing
-            var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
+            var currentSelectedTicket = CurrentState?.SelectedTicket;
             if (currentSelectedTicket?.Id == ticketId)
             {
                 Logger.LogDebug("Ticket {TicketId} is already selected, skipping refresh", ticketId);
@@ -375,7 +277,7 @@
 
     private async Task RefreshSelectedTicket()
     {
-        var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
+        var currentSelectedTicket = CurrentState?.SelectedTicket;
         if (currentSelectedTicket == null)
         {
             Logger.LogWarning("No ticket selected for refresh");
@@ -439,7 +341,7 @@
             showNewTicketModal = false;
             
             // Refresh the entire ticket list to ensure consistency
-            var currentUser = AppState.GetState()?.CurrentUser;
+            var currentUser = CurrentState?.CurrentUser;
             if (currentUser != null)
             {
                 // Refresh the ticket list
@@ -524,47 +426,21 @@
         Navigation.NavigateTo("/player/login", replace: true);
     }
 
-    private async Task SendReply()
+    private async Task OnReplyResult(ReplyDto? newReply)
     {
-        var currentUser = AppState.GetState()?.CurrentUser;
-        if (!string.IsNullOrWhiteSpace(replyText) && selectedTicket != null && currentUser != null)
+        if (newReply != null)
         {
-            try
-            {
-                AppState.DispatchLoadingStateAsync(true);
-                
-                // Create reply DTO
-                var createReplyDto = new CreateReplyDto(
-                    replyText,
-                    currentUser.Id,
-                    selectedTicket.Id);
-                
-                // Call API to add reply
-                var newReply = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
-                
-                // If API returned the new reply, refresh both the selected ticket and the ticket list
-                if (newReply != null)
-                {
-                    // Clear reply text after successful creation
-                    replyText = "";
-                    
-                    // Refresh the currently selected ticket to get the updated ticket with the new reply
-                    await RefreshSelectedTicket();
-                    
-                    // Refresh the ticket list to ensure proper sorting by last update date
-                    await RefreshTicketList();
-                    
-                    Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
-                }
-                
-                AppState.DispatchLoadingStateAsync(false);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to send reply for ticket {TicketId}", selectedTicket.Id);
-                await AppState.DispatchErrorAsync("Failed to send reply. Please try again.");
-                AppState.DispatchLoadingStateAsync(false);
-            }
+            // Refresh the currently selected ticket to get the updated ticket with the new reply
+            await RefreshSelectedTicket();
+            
+            // Refresh the ticket list to ensure proper sorting by last update date
+            await RefreshTicketList();
+            
+            Logger.LogInformation("Successfully handled reply result for ticket {TicketId}", selectedTicket?.Id);
+        }
+        else
+        {
+            Logger.LogWarning("Reply creation failed or returned null result");
         }
     }
 
