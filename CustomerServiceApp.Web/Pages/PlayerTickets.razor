@@ -290,7 +290,7 @@
             // Set loading state
             AppState.DispatchLoadingStateAsync(true);
             
-            // Get current player ID
+            // Check if user is authenticated
             var currentUser = AppState.GetState()?.CurrentUser;
             if (currentUser == null)
             {
@@ -299,40 +299,24 @@
                 return;
             }
 
-            // Fetch player-specific tickets from server
-            var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
+            // Load tickets and auto-select the first one
+            var tickets = await LoadTicketsAsync(autoSelectFirst: true);
             
-            // Convert TicketSummaryDto to TicketDto for app state compatibility
-            var tickets = ticketSummaries.Select(summary => new TicketDto(
-                summary.Id,
-                summary.Title,
-                summary.Description,
-                summary.Creator,
-                summary.Status,
-                summary.CreatedDate,
-                summary.LastUpdateDate,
-                null, // ResolvedDate
-                null, // ResolvedBy
-                new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
-            )).ToList().AsReadOnly();
-            
-            // Store tickets in app state
-            await AppState.DispatchTicketsLoadedAsync(tickets);
-            
-            // Auto-select first ticket if available (this will trigger loading of full details)
-            var firstTicket = tickets.FirstOrDefault();
-            if (firstTicket != null)
+            if (tickets == null)
             {
-                await SelectTicket(firstTicket.Id);
+                errorMessage = "Failed to load tickets. Please try again.";
             }
             
             isLoading = false;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to load tickets for player {PlayerId}", CurrentPlayerId);
+            Logger.LogError(ex, "Failed to initialize player tickets page for player {PlayerId}", CurrentPlayerId);
             errorMessage = "Failed to load tickets. Please try again.";
             isLoading = false;
+        }
+        finally
+        {
             AppState.DispatchLoadingStateAsync(false);
         }
     }
@@ -464,18 +448,23 @@
         }
     }
 
-    private async Task RefreshTicketList()
+    /// <summary>
+    /// Loads tickets from the API and updates the app state
+    /// </summary>
+    /// <param name="autoSelectFirst">Whether to automatically select the first ticket after loading</param>
+    /// <returns>The loaded tickets, or null if loading failed</returns>
+    private async Task<IReadOnlyList<TicketDto>?> LoadTicketsAsync(bool autoSelectFirst = false)
     {
         var currentUser = AppState.GetState()?.CurrentUser;
         if (currentUser == null)
         {
-            Logger.LogWarning("No authenticated user found when refreshing ticket list");
-            return;
+            Logger.LogWarning("No authenticated user found when loading tickets");
+            return null;
         }
 
         try
         {
-            // Fetch fresh tickets from server
+            // Fetch tickets from server
             var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
             
             // Convert TicketSummaryDto to TicketDto for app state compatibility
@@ -492,15 +481,32 @@
                 new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
             )).ToList().AsReadOnly();
             
-            // Store refreshed tickets in app state
+            // Store tickets in app state
             await AppState.DispatchTicketsLoadedAsync(tickets);
             
-            Logger.LogDebug("Successfully refreshed ticket list with {Count} tickets", tickets.Count);
+            // Auto-select first ticket if requested and available
+            if (autoSelectFirst)
+            {
+                var firstTicket = tickets.FirstOrDefault();
+                if (firstTicket != null)
+                {
+                    await SelectTicket(firstTicket.Id);
+                }
+            }
+            
+            Logger.LogDebug("Successfully loaded ticket list with {Count} tickets", tickets.Count);
+            return tickets;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error refreshing ticket list for user {UserId}", currentUser.Id);
+            Logger.LogError(ex, "Error loading tickets for user {UserId}", currentUser.Id);
+            return null;
         }
+    }
+
+    private async Task RefreshTicketList()
+    {
+        await LoadTicketsAsync(autoSelectFirst: false);
     }
 
     private async Task LogoutPlayer()

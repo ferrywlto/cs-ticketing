@@ -116,7 +116,9 @@ public class ApiService
             if (response.IsSuccessStatusCode)
             {
                 var tickets = await response.Content.ReadFromJsonAsync<List<TicketSummaryDto>>(_jsonOptions);
-                return tickets?.AsReadOnly() ?? new List<TicketSummaryDto>().AsReadOnly();
+                if (tickets == null) return [];
+
+                return tickets.AsReadOnly();
             }
 
             return [];
@@ -124,7 +126,7 @@ public class ApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get tickets for player {PlayerId} from API", playerId);
-            return new List<TicketSummaryDto>().AsReadOnly();
+            return [];
         }
     }
 

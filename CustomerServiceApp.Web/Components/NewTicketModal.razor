@@ -173,7 +173,7 @@
             errorMessage = null;
 
             // Get current user from app state
-            var currentUser = AppState.GetState().CurrentUser;
+            var currentUser = AppState.GetState()?.CurrentUser;
             if (currentUser == null)
             {
                 errorMessage = "User not authenticated. Please log in again.";
