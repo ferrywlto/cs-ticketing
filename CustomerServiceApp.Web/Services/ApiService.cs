@@ -103,6 +103,32 @@ public class ApiService
     }
 
     /// <summary>
+    /// Gets tickets for a specific player
+    /// </summary>
+    /// <param name="playerId">Player ID</param>
+    /// <returns>List of tickets for the player</returns>
+    public async Task<IReadOnlyList<TicketSummaryDto>> GetPlayerTicketsAsync(Guid playerId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/api/tickets/player/{playerId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var tickets = await response.Content.ReadFromJsonAsync<List<TicketSummaryDto>>(_jsonOptions);
+                return tickets?.AsReadOnly() ?? new List<TicketSummaryDto>().AsReadOnly();
+            }
+
+            return [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get tickets for player {PlayerId} from API", playerId);
+            return new List<TicketSummaryDto>().AsReadOnly();
+        }
+    }
+
+    /// <summary>
     /// Gets a specific ticket by ID
     /// </summary>
     /// <param name="ticketId">Ticket ID</param>

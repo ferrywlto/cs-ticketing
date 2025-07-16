@@ -245,17 +245,40 @@
             // Set loading state
             AppState.DispatchLoadingStateAsync(true);
             
-            // Fetch tickets from server
-            var tickets = await ApiService.GetTicketsAsync();
+            // Get current player ID
+            var currentUser = AppState.GetState().CurrentUser;
+            if (currentUser == null)
+            {
+                Logger.LogWarning("No authenticated user found when loading player tickets");
+                Navigation.NavigateTo("/player/login", replace: true);
+                return;
+            }
+
+            // Fetch player-specific tickets from server
+            var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
+            
+            // Convert TicketSummaryDto to TicketDto for app state compatibility
+            var tickets = ticketSummaries.Select(summary => new TicketDto(
+                summary.Id,
+                summary.Title,
+                summary.Description,
+                summary.Creator,
+                summary.Status,
+                summary.CreatedDate,
+                summary.LastUpdateDate,
+                null, // ResolvedDate
+                null, // ResolvedBy
+                new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
+            )).ToList().AsReadOnly();
             
             // Store tickets in app state
             await AppState.DispatchTicketsLoadedAsync(tickets);
             
-            // Auto-select first ticket if available
+            // Auto-select first ticket if available (this will trigger loading of full details)
             var firstTicket = tickets.FirstOrDefault();
             if (firstTicket != null)
             {
-                await AppState.DispatchSelectTicketAsync(firstTicket);
+                await SelectTicket(firstTicket.Id);
             }
             
             isLoading = false;
@@ -276,10 +299,30 @@
 
     private async Task SelectTicket(Guid ticketId)
     {
-        var ticket = TicketList.FirstOrDefault(t => t.Id == ticketId);
-        if (ticket != null)
+        try
         {
-            await AppState.DispatchSelectTicketAsync(ticket);
+            // Set loading state for ticket details
+            AppState.DispatchLoadingStateAsync(true);
+            
+            // Fetch full ticket details including messages
+            var fullTicket = await ApiService.GetTicketAsync(ticketId);
+            if (fullTicket != null)
+            {
+                await AppState.DispatchSelectTicketAsync(fullTicket);
+            }
+            else
+            {
+                Logger.LogWarning("Failed to load ticket details for ticket {TicketId}", ticketId);
+                await AppState.DispatchErrorAsync("Failed to load ticket details. Please try again.");
+            }
+            
+            AppState.DispatchLoadingStateAsync(false);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading ticket details for ticket {TicketId}", ticketId);
+            await AppState.DispatchErrorAsync("Failed to load ticket details. Please try again.");
+            AppState.DispatchLoadingStateAsync(false);
         }
     }
 
