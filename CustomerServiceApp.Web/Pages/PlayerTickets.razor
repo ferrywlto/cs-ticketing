@@ -4,6 +4,7 @@
 @using CustomerServiceApp.Web
 @using CustomerServiceApp.Application.Tickets
 @using CustomerServiceApp.Application.Common.DTOs
+@using CustomerServiceApp.Domain.Tickets
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager Navigation
@@ -66,10 +67,14 @@
                                  @onclick="() => SelectTicket(ticket.Id)">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1 me-3">
-                                        <h6 class="mb-1 text-truncate">@ticket.Title</h6>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <h6 class="mb-0 text-truncate me-2">@ticket.Title</h6>
+                                            <span class="badge @GetStatusBadgeClass(ticket.Status)">@ticket.Status</span>
+                                        </div>
                                         <div class="small text-muted">
                                             <div>@(ticket.Creator?.Name ?? "Unknown")</div>
-                                            <div>@(ticket.Creator?.PlayerNumber ?? "N/A") • @ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
+                                            <div>@(ticket.Creator?.PlayerNumber ?? "N/A") • Created: @ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
+                                            <div class="text-primary"><i class="bi bi-clock"></i> Updated: @ticket.LastUpdateDate.ToString("MMM dd, yyyy HH:mm")</div>
                                         </div>
                                     </div>
                                     <div class="avatar-placeholder">
@@ -146,7 +151,14 @@
                                                 <div class="avatar-placeholder ms-3">
                                                     @if (isFromAgent)
                                                     {
-                                                        <i class="bi bi-shield-fill fs-4 text-success"></i>
+                                                        @if (!string.IsNullOrEmpty(message.Author?.Avatar))
+                                                        {
+                                                            <img src="@message.Author.Avatar" alt="@(message.Author?.Name ?? "CS Agent")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="bi bi-shield-fill fs-4 text-success"></i>
+                                                        }
                                                     }
                                                     else if (!string.IsNullOrEmpty(message.Author?.Avatar))
                                                     {
@@ -240,6 +252,20 @@
 
     // Get selected ticket from app state
     private TicketDto? selectedTicket => AppState.GetState()?.SelectedTicket;
+
+    /// <summary>
+    /// Gets the CSS class for ticket status badge
+    /// </summary>
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Open" => "bg-success text-white",
+            "InResolution" => "bg-warning text-dark",
+            "Resolved" => "bg-primary text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
 
     protected override async Task OnInitializedAsync()
     {
