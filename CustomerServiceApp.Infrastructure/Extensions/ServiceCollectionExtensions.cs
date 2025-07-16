@@ -228,14 +228,14 @@ public static class ServiceCollectionExtensions
             Author = agent1,
             TicketId = ticket1.Id
         };
-
+        await Task.Delay(10);
         var reply2 = new Domain.Tickets.Reply
         {
             Content = "I tried resetting my password but it still doesn't work.",
             Author = player1,
             TicketId = ticket1.Id
         };
-
+        await Task.Delay(10);
         // Replies for resolved ticket 1 (Player1 ticket resolved by Agent2)
         var resolvedReply1 = new Domain.Tickets.Reply
         {
@@ -243,21 +243,21 @@ public static class ServiceCollectionExtensions
             Author = agent2,
             TicketId = resolvedTicket1.Id
         };
-
+        await Task.Delay(10);
         var resolvedReply2 = new Domain.Tickets.Reply
         {
             Content = "My email is player1@example.com and player number is P001.",
             Author = player1,
             TicketId = resolvedTicket1.Id
         };
-
+        await Task.Delay(10);
         var resolvedReply3 = new Domain.Tickets.Reply
         {
             Content = "Thank you. I've verified your account successfully. Everything looks good now.",
             Author = agent2,
             TicketId = resolvedTicket1.Id
         };
-
+        await Task.Delay(10);
         // Replies for resolved ticket 2 (Player2 ticket with Agent1 reply, then resolved by Agent3)
         var resolvedReply4 = new Domain.Tickets.Reply
         {
@@ -265,14 +265,14 @@ public static class ServiceCollectionExtensions
             Author = agent1,
             TicketId = resolvedTicket2.Id
         };
-
+        await Task.Delay(10);
         var resolvedReply5 = new Domain.Tickets.Reply
         {
             Content = "Thank you! When can I expect this to be fixed?",
             Author = player2,
             TicketId = resolvedTicket2.Id
         };
-
+        await Task.Delay(10);
         var resolvedReply6 = new Domain.Tickets.Reply
         {
             Content = "I've reviewed the case and corrected your balance. The issue has been resolved.",
