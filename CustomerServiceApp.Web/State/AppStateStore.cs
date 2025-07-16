@@ -140,9 +140,12 @@ public class AppStateStore
     {
         lock (_lock)
         {
+            // Sort tickets by last update date in descending order (most recent first)
+            var sortedTickets = tickets.OrderByDescending(t => t.LastUpdateDate).ToList().AsReadOnly();
+            
             _state = _state with
             {
-                Tickets = tickets,
+                Tickets = sortedTickets,
                 IsLoading = false,
                 Error = null
             };
@@ -174,9 +177,12 @@ public class AppStateStore
         lock (_lock)
         {
             var updatedTickets = new List<TicketDto>(_state.Tickets) { ticket };
+            // Sort tickets by last update date in descending order (most recent first)
+            var sortedTickets = updatedTickets.OrderByDescending(t => t.LastUpdateDate).ToList().AsReadOnly();
+            
             _state = _state with
             {
-                Tickets = updatedTickets.AsReadOnly(),
+                Tickets = sortedTickets,
                 SelectedTicket = ticket,
                 SuccessMessage = "Ticket created successfully",
                 Error = null
@@ -198,9 +204,12 @@ public class AppStateStore
                 .Select(t => t.Id == updatedTicket.Id ? updatedTicket : t)
                 .ToList();
 
+            // Sort tickets by last update date in descending order (most recent first)
+            var sortedTickets = updatedTickets.OrderByDescending(t => t.LastUpdateDate).ToList().AsReadOnly();
+
             _state = _state with
             {
-                Tickets = updatedTickets.AsReadOnly(),
+                Tickets = sortedTickets,
                 SelectedTicket = _state.SelectedTicket?.Id == updatedTicket.Id ? updatedTicket : _state.SelectedTicket,
                 SuccessMessage = "Ticket updated successfully",
                 Error = null

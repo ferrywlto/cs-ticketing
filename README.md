@@ -158,6 +158,58 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.17.0 - Enhanced Player UX & Role-Based UI Controls
+- **CustomerServiceApp.Web v1.17.0**: Improved player experience with proper role-based interface design
+
+#### 🚀 **NEW FEATURES**:
+- **Role-Based UI Controls**:
+  - Removed resolve ticket button from PlayerTickets.razor (only agents should resolve tickets)
+  - Eliminated ResolveTicket method from player interface for proper role separation
+  - Clean, focused player interface without administrative controls
+
+- **Enhanced Reply Functionality**:
+  - Advanced loading states with spinner and "Sending..." feedback during reply submission
+  - Smart form validation: disabled send button when text is empty or system is loading
+  - Disabled textarea during loading to prevent multiple submissions
+  - Seamless user experience with proper visual feedback
+
+#### 🛡️ **SECURITY & CONSISTENCY**:
+- **Player-Specific API Integration**: SendReply method now uses GetPlayerTicketsAsync consistently for all data operations
+- **Improved Data Consistency**: Enhanced reply refresh logic maintains both ticket list and detail view synchronization
+- **Fallback Error Handling**: Robust fallback to SelectTicket method when API responses are unexpected
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Optimized API Usage**: Consistent use of player-specific endpoints throughout the reply workflow
+- **Enhanced State Management**: Proper loading state coordination between UI controls and backend operations
+- **Error Recovery**: Comprehensive error handling with graceful degradation
+
+### Version 1.16.0 - Player-Specific API Integration & Enhanced Security
+- **CustomerServiceApp.Web v1.16.0**: Enhanced player experience with optimized ticket loading
+
+#### 🚀 **NEW FEATURES**:
+- **Player-Specific API Integration**:
+  - Added `GetPlayerTicketsAsync()` method to `ApiService` for player-specific ticket fetching
+  - Updated `PlayerTickets.razor` to use `/api/tickets/player/{playerId}` endpoint instead of generic tickets endpoint
+  - Enhanced security by ensuring players only fetch their own tickets at the API level
+  - Improved performance by reducing data transfer (TicketSummaryDto vs full TicketDto for list view)
+
+- **Smart Ticket Detail Loading**:
+  - List view loads lightweight `TicketSummaryDto` for optimal performance
+  - Detail view dynamically fetches full `TicketDto` with messages when ticket is selected
+  - Enhanced `SelectTicket()` method with proper loading states and error handling
+  - Seamless user experience with progressive data loading
+
+#### 🛡️ **SECURITY ENHANCEMENTS**:
+- **Player Authorization Validation**: Current user validation before API calls with automatic redirect to login if unauthenticated
+- **Role-Based Data Access**: Players now use dedicated player-specific endpoints enforcing server-side authorization
+- **Reduced Attack Surface**: Elimination of access to generic ticket endpoints from player interface
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **DTO Conversion Strategy**: Automatic conversion from TicketSummaryDto to TicketDto for AppState compatibility
+- **Progressive Loading Pattern**: List view for browsing, detail view for interaction - optimal data loading strategy
+- **Enhanced Error Handling**: Comprehensive error handling in both ticket list loading and detail fetching
+- **State Management**: Proper loading state management during ticket selection operations
+
 ### Version 1.15.0 - Enhanced Player Experience & Direct DTO Usage
 - **CustomerServiceApp.Web v1.10.0**: Added logout functionality and simplified authentication models
 - **CustomerServiceApp.IntegrationTests v1.1.0**: Enhanced test coverage for UI interactions

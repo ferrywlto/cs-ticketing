@@ -103,6 +103,34 @@ public class ApiService
     }
 
     /// <summary>
+    /// Gets tickets for a specific player
+    /// </summary>
+    /// <param name="playerId">Player ID</param>
+    /// <returns>List of tickets for the player</returns>
+    public async Task<IReadOnlyList<TicketSummaryDto>> GetPlayerTicketsAsync(Guid playerId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"/api/tickets/player/{playerId}");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var tickets = await response.Content.ReadFromJsonAsync<List<TicketSummaryDto>>(_jsonOptions);
+                if (tickets == null) return [];
+
+                return tickets.AsReadOnly();
+            }
+
+            return [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get tickets for player {PlayerId} from API", playerId);
+            return [];
+        }
+    }
+
+    /// <summary>
     /// Gets a specific ticket by ID
     /// </summary>
     /// <param name="ticketId">Ticket ID</param>
@@ -157,8 +185,8 @@ public class ApiService
     /// </summary>
     /// <param name="ticketId">Ticket ID</param>
     /// <param name="createReplyDto">Reply data</param>
-    /// <returns>Updated ticket with the new reply</returns>
-    public async Task<TicketDto?> AddReplyAsync(Guid ticketId, CreateReplyDto createReplyDto)
+    /// <returns>The newly created reply</returns>
+    public async Task<ReplyDto?> AddReplyAsync(Guid ticketId, CreateReplyDto createReplyDto)
     {
         try
         {
@@ -166,7 +194,7 @@ public class ApiService
             
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadFromJsonAsync<TicketDto>(_jsonOptions);
+                return await response.Content.ReadFromJsonAsync<ReplyDto>(_jsonOptions);
             }
 
             return null;
