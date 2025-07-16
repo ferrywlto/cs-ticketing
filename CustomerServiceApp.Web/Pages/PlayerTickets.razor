@@ -235,7 +235,7 @@
     // Get current player ID from app state
     private string CurrentPlayerId => AppState.GetState()?.CurrentUser?.Id.ToString() ?? "";
 
-    // Get tickets from app state instead of mock data
+    // Get tickets from app state (already sorted by app state)
     private IReadOnlyList<TicketDto> TicketList => AppState.GetState()?.Tickets ?? new List<TicketDto>().AsReadOnly();
 
     // Get selected ticket from app state
@@ -410,25 +410,8 @@
             var currentUser = AppState.GetState()?.CurrentUser;
             if (currentUser != null)
             {
-                // Fetch fresh tickets from server
-                var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
-                
-                // Convert TicketSummaryDto to TicketDto for app state compatibility
-                var tickets = ticketSummaries.Select(summary => new TicketDto(
-                    summary.Id,
-                    summary.Title,
-                    summary.Description,
-                    summary.Creator,
-                    summary.Status,
-                    summary.CreatedDate,
-                    summary.LastUpdateDate,
-                    null, // ResolvedDate
-                    null, // ResolvedBy
-                    new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
-                )).ToList().AsReadOnly();
-                
-                // Store refreshed tickets in app state
-                await AppState.DispatchTicketsLoadedAsync(tickets);
+                // Refresh the ticket list
+                await RefreshTicketList();
                 
                 // Select the newly created ticket
                 await SelectTicket(newTicket.Id);
@@ -439,6 +422,45 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error handling newly created ticket {TicketId}", newTicket.Id);
+        }
+    }
+
+    private async Task RefreshTicketList()
+    {
+        var currentUser = AppState.GetState()?.CurrentUser;
+        if (currentUser == null)
+        {
+            Logger.LogWarning("No authenticated user found when refreshing ticket list");
+            return;
+        }
+
+        try
+        {
+            // Fetch fresh tickets from server
+            var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
+            
+            // Convert TicketSummaryDto to TicketDto for app state compatibility
+            var tickets = ticketSummaries.Select(summary => new TicketDto(
+                summary.Id,
+                summary.Title,
+                summary.Description,
+                summary.Creator,
+                summary.Status,
+                summary.CreatedDate,
+                summary.LastUpdateDate,
+                null, // ResolvedDate
+                null, // ResolvedBy
+                new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
+            )).ToList().AsReadOnly();
+            
+            // Store refreshed tickets in app state
+            await AppState.DispatchTicketsLoadedAsync(tickets);
+            
+            Logger.LogDebug("Successfully refreshed ticket list with {Count} tickets", tickets.Count);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing ticket list for user {UserId}", currentUser.Id);
         }
     }
 
@@ -466,7 +488,7 @@
                 // Call API to add reply
                 var newReply = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
                 
-                // If API returned the new reply, refresh the selected ticket to get the latest data
+                // If API returned the new reply, refresh both the selected ticket and the ticket list
                 if (newReply != null)
                 {
                     // Clear reply text after successful creation
@@ -474,6 +496,9 @@
                     
                     // Refresh the currently selected ticket to get the updated ticket with the new reply
                     await RefreshSelectedTicket();
+                    
+                    // Refresh the ticket list to ensure proper sorting by last update date
+                    await RefreshTicketList();
                     
                     Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
                 }
