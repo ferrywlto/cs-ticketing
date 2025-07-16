@@ -2,16 +2,16 @@
 
 ## Requirements
 
-- [ ] Ticket Creation: Allow creation of new support tickets with subject and
+- [x] Ticket Creation: Allow creation of new support tickets with subject and
 description.
-- [ ] Ticket List View: Display a list of unresolved support tickets with their subject, username, user ID and placeholder avatar.
-- [ ] Ticket Detail View: Allow viewing the full details of a ticket, including a
+- [x] Ticket List View: Display a list of unresolved support tickets with their subject, username, user ID and placeholder avatar.
+- [x] Ticket Detail View: Allow viewing the full details of a ticket, including a
 chronological thread of replies.
-- [ ] Reply to Ticket: Support agents should be able to add replies to a ticket.
-- [ ] Status Updates:
-    - [ ] A ticket starts as “Open”.
-    - [ ] It becomes “In Resolution” when an agent replies.
-    - [ ] It can be manually marked as “Resolved” by the agent.
+- [x] Reply to Ticket: Support agents should be able to add replies to a ticket.
+- [x] Status Updates:
+    - [x] A ticket starts as “Open”.
+    - [x] It becomes “In Resolution” when an agent replies.
+    - [x] It can be manually marked as “Resolved” by the agent.
 
 ### Backend
 - Use .Net 8 for the backend.
@@ -30,7 +30,19 @@ chronological thread of replies.
 - Demonstrate effective state management
 
 ## How to run
-TBD
+To run with Aspire dashboard, execute at project root directory:
+```
+dotnet run --project CustomerServiceApp.AppHost
+```
+
+To run the backend and frontend individually:
+```
+dotnet run --project CustomerServiceApp.API -lp https
+// and
+dotnet run --project CustomerServiceApp.Web -lp https
+```
+
+Note that the `-lp` switch for https is required to pass CORS check.
 
 ## Requirement Analysis
 - There are the entities in the system:
@@ -79,6 +91,7 @@ TBD
 - Agent can see all tickets from any player on the list.
 - Agent can reply to any ticket.  
 - Only Player can create new ticket.
+- Player can see resolved tickets on the list.
 
 ## Technical Decisions
 - Using In-memory database due to keeping the project as simple as possible without external dependencies, this make sure user can run on their machine regardless of platform. As data persistency is not a mandatory in requirements.
@@ -88,6 +101,12 @@ TBD
 - The Mapper classes was created to make our methods idempotent. We are not using AutoMapper in this project to keep the dependencies to minimum for simplicity, ensuring smooth `dotnet restore` process for code user.
 
 ## Design
+- This project will be built with domain driven design (DDD) with test driven development (TDD)
+    - At the time of submission, there are total 201 tests created.
+    - The Front-end project has the lowest test coverage (23%)
+    - The Infrastructure and Application project has 65-68% test coverage
+    - The Domain and API project has 93-98% test coverage
+
 - We will use .NET Aspire to orchestrate the following projects:
     - Domain Model
     - Infrastructure - EF Core, repositories, external services. 
@@ -96,7 +115,8 @@ TBD
     - Web - Blazor WASM front-end client.
     - UnitTests
     - Integration Tests
-    - E2E Tests - Selenium for testing UI behavior
+    - E2E Tests - Selenium for testing UI behavior - omitted due to time limit, will add after submission
+
 - It is arguably that we should have different independently deployable services for authentication user and ticket management. However for this project scale it is a bit over-engineering. Instead we will focus on separating concerns into isolated service and controller classes.
 - Due to the lack of user management, user and agent records are seeded during application startup.
 - We will use JWT with short exp for session management. 
@@ -146,15 +166,50 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 ## Possible enhancements
 - Use better authentication mechanism like OAuth and MFA.
 - Use real database for persistent data storage.
-- APIs for user management.
 - Queuing mechanism to fetch and processing ticket requests to avoid overwhelm infrastructure.
 - Separate APIs by concern into individual deployable units.
 - CI/CD pipeline with test automation
 - Cloud deployment
 - Caching mechanism to improve frequent reading tickets loading time.  
-- Using Signalr for ticket update notifications.
+- Using Signalr for ticket update notifications and refresh.
 - Paging mechanism for loading tickets and messages in a ticket thread.
-- Apply rate limit to APIs 
+- Apply rate limit to APIs
+- Making the list of message replies in scrollable pane with sticky message reply input at bottom.
+- More robust token authentication and authorization with id, access, and refresh tokens instead of single JWT.
+- Use cloud blob storage to host user's avatar images
+
+## Screenshots
+
+### Aspire Dashboard
+![Aspire Dashboard](doc/img/aspire.jpg)
+
+### API Swagger Doc
+![API Swagger Doc](doc/img/swagger.jpg)
+
+### Home Page
+![Home Page](doc/img/home.jpg)
+
+### Player Login
+![Player Login](doc/img/player-login.jpg)
+
+### Agent Login
+![Agent Login](doc/img/agent-login.jpg)
+
+### Agent Ticket Management
+![Agent Ticket Management](doc/img/agent-ticket.jpg)
+
+### Player Ticket - Open
+![Player Ticket - Open](doc/img/player-ticket-open.jpg)
+
+### Player Ticket - In Resolution
+![Player Ticket - In Resolution](doc/img/player-in-resolution.jpg)
+
+### Player Ticket - Resolved
+![Player Ticket - Resolved](doc/img/player-ticket-resolved.jpg)
+
+### Player Ticket - Create Ticket
+![Player Ticket - Create Ticket](doc/img/player-create-ticket.jpg)
+
 
 ## Change Log
 
