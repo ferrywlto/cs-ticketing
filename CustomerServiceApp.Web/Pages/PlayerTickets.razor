@@ -307,6 +307,14 @@
     {
         try
         {
+            // Check if the clicked ticket is already selected - if so, do nothing
+            var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
+            if (currentSelectedTicket?.Id == ticketId)
+            {
+                Logger.LogDebug("Ticket {TicketId} is already selected, skipping refresh", ticketId);
+                return;
+            }
+            
             // Set loading state for ticket details
             AppState.DispatchLoadingStateAsync(true);
             
@@ -315,6 +323,7 @@
             if (fullTicket != null)
             {
                 await AppState.DispatchSelectTicketAsync(fullTicket);
+                Logger.LogDebug("Successfully selected and loaded ticket {TicketId}", ticketId);
             }
             else
             {
@@ -328,6 +337,43 @@
         {
             Logger.LogError(ex, "Error loading ticket details for ticket {TicketId}", ticketId);
             await AppState.DispatchErrorAsync("Failed to load ticket details. Please try again.");
+            AppState.DispatchLoadingStateAsync(false);
+        }
+    }
+
+    private async Task RefreshSelectedTicket()
+    {
+        var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
+        if (currentSelectedTicket == null)
+        {
+            Logger.LogWarning("No ticket selected for refresh");
+            return;
+        }
+
+        try
+        {
+            // Set loading state for ticket details
+            AppState.DispatchLoadingStateAsync(true);
+            
+            // Fetch fresh ticket details including messages
+            var fullTicket = await ApiService.GetTicketAsync(currentSelectedTicket.Id);
+            if (fullTicket != null)
+            {
+                await AppState.DispatchSelectTicketAsync(fullTicket);
+                Logger.LogDebug("Successfully refreshed ticket {TicketId}", currentSelectedTicket.Id);
+            }
+            else
+            {
+                Logger.LogWarning("Failed to refresh ticket details for ticket {TicketId}", currentSelectedTicket.Id);
+                await AppState.DispatchErrorAsync("Failed to refresh ticket details. Please try again.");
+            }
+            
+            AppState.DispatchLoadingStateAsync(false);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing ticket details for ticket {TicketId}", currentSelectedTicket.Id);
+            await AppState.DispatchErrorAsync("Failed to refresh ticket details. Please try again.");
             AppState.DispatchLoadingStateAsync(false);
         }
     }
@@ -426,15 +472,10 @@
                     // Clear reply text after successful creation
                     replyText = "";
                     
-                    // Reload the selected ticket to get the updated ticket with the new reply
-                    await SelectTicket(selectedTicket.Id);
+                    // Refresh the currently selected ticket to get the updated ticket with the new reply
+                    await RefreshSelectedTicket();
                     
                     Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
-                }
-                else
-                {
-                    // Fallback: reload the selected ticket details
-                    await SelectTicket(selectedTicket.Id);
                 }
                 
                 AppState.DispatchLoadingStateAsync(false);
