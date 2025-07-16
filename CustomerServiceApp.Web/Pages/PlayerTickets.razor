@@ -97,11 +97,8 @@
                 <div class="d-flex flex-column h-100">
                     <!-- Ticket Header -->
                     <div class="p-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div class="mb-3">
                             <h4 class="mb-0">@selectedTicket.Title</h4>
-                            <button class="btn btn-success" @onclick="ResolveTicket">
-                                <i class="bi bi-check-circle"></i> Resolve
-                            </button>
                         </div>
                         
                         <!-- Ticket Description Card -->
@@ -192,9 +189,18 @@
                                 }
                             </div>
                             <div class="flex-grow-1">
-                                <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText"></textarea>
-                                <button class="btn btn-primary" @onclick="SendReply">
-                                    <i class="bi bi-send"></i> Send
+                                <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText" disabled="@(AppState.GetState().IsLoading)"></textarea>
+                                <button class="btn btn-primary" @onclick="SendReply" disabled="@(string.IsNullOrWhiteSpace(replyText) || AppState.GetState().IsLoading)">
+                                    @if (AppState.GetState().IsLoading)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span>Sending...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-send"></i>
+                                        <span>Send</span>
+                                    }
                                 </button>
                             </div>
                         </div>
@@ -371,33 +377,6 @@
         Navigation.NavigateTo("/player/login", replace: true);
     }
 
-    private async Task ResolveTicket()
-    {
-        if (selectedTicket != null)
-        {
-            try
-            {
-                AppState.DispatchLoadingStateAsync(true);
-                
-                // Call API to resolve ticket
-                await ApiService.ResolveTicketAsync(selectedTicket.Id);
-                
-                // Update ticket status in state
-                var updatedTicket = selectedTicket with { Status = "Resolved" };
-                await AppState.DispatchTicketUpdatedAsync(updatedTicket);
-                
-                AppState.DispatchLoadingStateAsync(false);
-                Logger.LogInformation("Ticket {TicketId} resolved successfully", selectedTicket.Id);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to resolve ticket {TicketId}", selectedTicket.Id);
-                await AppState.DispatchErrorAsync("Failed to resolve ticket. Please try again.");
-                AppState.DispatchLoadingStateAsync(false);
-            }
-        }
-    }
-
     private async Task SendReply()
     {
         if (!string.IsNullOrWhiteSpace(replyText) && selectedTicket != null && AppState.GetState().CurrentUser != null)
@@ -413,20 +392,41 @@
                     selectedTicket.Id);
                 
                 // Call API to add reply
-                await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
+                var updatedTicket = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
                 
                 // Clear reply text
                 replyText = "";
                 
-                // Refresh ticket data to get updated messages
-                var tickets = await ApiService.GetTicketsAsync();
-                await AppState.DispatchTicketsLoadedAsync(tickets);
-                
-                // Maintain selected ticket
-                var updatedSelectedTicket = tickets.FirstOrDefault(t => t.Id == selectedTicket.Id);
-                if (updatedSelectedTicket != null)
+                // If API returned updated ticket, use it directly, otherwise fetch fresh data
+                if (updatedTicket != null)
                 {
-                    await AppState.DispatchSelectTicketAsync(updatedSelectedTicket);
+                    await AppState.DispatchSelectTicketAsync(updatedTicket);
+                    
+                    // Also refresh the tickets list to get updated summaries
+                    var currentUser = AppState.GetState().CurrentUser;
+                    if (currentUser != null)
+                    {
+                        var ticketSummaries = await ApiService.GetPlayerTicketsAsync(currentUser.Id);
+                        var tickets = ticketSummaries.Select(summary => new TicketDto(
+                            summary.Id,
+                            summary.Title,
+                            summary.Description,
+                            summary.Creator,
+                            summary.Status,
+                            summary.CreatedDate,
+                            summary.LastUpdateDate,
+                            null, // ResolvedDate
+                            null, // ResolvedBy
+                            new List<ReplyDto>() // Empty messages - will be loaded when ticket is selected
+                        )).ToList().AsReadOnly();
+                        
+                        await AppState.DispatchTicketsLoadedAsync(tickets);
+                    }
+                }
+                else
+                {
+                    // Fallback: reload the selected ticket details
+                    await SelectTicket(selectedTicket.Id);
                 }
                 
                 AppState.DispatchLoadingStateAsync(false);
