@@ -1,7 +1,6 @@
 using CustomerServiceApp.Application.Authentication;
 using CustomerServiceApp.Application.Common.DTOs;
 using CustomerServiceApp.Web.Services;
-using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace CustomerServiceApp.Web.State;
@@ -87,13 +86,12 @@ public class AppStateStore
     /// Dispatches loading state change
     /// </summary>
     /// <param name="isLoading">Loading state</param>
-    public async Task DispatchLoadingStateAsync(bool isLoading)
+    public void DispatchLoadingStateAsync(bool isLoading)
     {
         lock (_lock)
         {
             _state = _state with { IsLoading = isLoading };
         }
-        await PersistStateAsync();
         NotifyStateChanged();
     }
 
@@ -328,103 +326,5 @@ public class AppStateStore
             // Fail silently to avoid breaking the application but log the error
             _logger?.LogWarning(ex, "Failed to clear persisted state from local storage. Storage may be unavailable.");
         }
-    }
-
-    /// <summary>
-    /// Dispatches login action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="authResult">Authentication result from login</param>
-    [Obsolete("Use DispatchLoginAsync for better async handling")]
-    public void DispatchLogin(AuthenticationResultDto authResult)
-    {
-        _ = DispatchLoginAsync(authResult); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches logout action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    [Obsolete("Use DispatchLogoutAsync for better async handling")]
-    public void DispatchLogout()
-    {
-        _ = DispatchLogoutAsync(); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches loading state change (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="isLoading">Loading state</param>
-    [Obsolete("Use DispatchLoadingStateAsync for better async handling")]
-    public void DispatchLoadingState(bool isLoading)
-    {
-        _ = DispatchLoadingStateAsync(isLoading); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches error action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="error">Error message</param>
-    [Obsolete("Use DispatchErrorAsync for better async handling")]
-    public void DispatchError(string error)
-    {
-        _ = DispatchErrorAsync(error); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches success message action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="message">Success message</param>
-    [Obsolete("Use DispatchSuccessMessageAsync for better async handling")]
-    public void DispatchSuccessMessage(string message)
-    {
-        _ = DispatchSuccessMessageAsync(message); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches tickets loaded action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="tickets">List of tickets</param>
-    [Obsolete("Use DispatchTicketsLoadedAsync for better async handling")]
-    public void DispatchTicketsLoaded(IReadOnlyList<TicketDto> tickets)
-    {
-        _ = DispatchTicketsLoadedAsync(tickets); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches ticket selection action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="ticket">Selected ticket</param>
-    [Obsolete("Use DispatchSelectTicketAsync for better async handling")]
-    public void DispatchSelectTicket(TicketDto? ticket)
-    {
-        _ = DispatchSelectTicketAsync(ticket); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches ticket creation action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="ticket">Newly created ticket</param>
-    [Obsolete("Use DispatchTicketCreatedAsync for better async handling")]
-    public void DispatchTicketCreated(TicketDto ticket)
-    {
-        _ = DispatchTicketCreatedAsync(ticket); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Dispatches ticket updated action (synchronous wrapper for backward compatibility)
-    /// </summary>
-    /// <param name="updatedTicket">Updated ticket</param>
-    [Obsolete("Use DispatchTicketUpdatedAsync for better async handling")]
-    public void DispatchTicketUpdated(TicketDto updatedTicket)
-    {
-        _ = DispatchTicketUpdatedAsync(updatedTicket); // Fire and forget for backward compatibility
-    }
-
-    /// <summary>
-    /// Clears all messages (synchronous wrapper for backward compatibility)
-    /// </summary>
-    [Obsolete("Use DispatchClearMessagesAsync for better async handling")]
-    public void DispatchClearMessages()
-    {
-        _ = DispatchClearMessagesAsync(); // Fire and forget for backward compatibility
     }
 }

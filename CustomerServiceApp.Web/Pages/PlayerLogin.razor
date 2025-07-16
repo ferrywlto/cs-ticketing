@@ -5,6 +5,8 @@
 @inject NavigationManager Navigation
 @implements IDisposable
 @using CustomerServiceApp.Application.Authentication
+@using CustomerServiceApp.Application.Common.DTOs
+@using CustomerServiceApp.Web.ViewModels
 
 <PageTitle>Customer Login</PageTitle>
 
@@ -17,29 +19,29 @@
                         <h3 class="text-center mb-0">Customer Login</h3>
                     </div>
                     <div class="card-body">
-                        @if (!string.IsNullOrEmpty(errorMessage))
+                        @if (!string.IsNullOrEmpty(viewModel.ErrorMessage))
                         {
                             <div class="alert alert-danger">
-                                @errorMessage
+                                @viewModel.ErrorMessage
                             </div>
                         }
                         
-                        <EditForm Model="@loginRequest" OnValidSubmit="@HandleLogin">
+                        <EditForm Model="@viewModel" OnValidSubmit="@HandleLogin">
                             <DataAnnotationsValidator />
                             <ValidationSummary class="text-danger" />
                             
                             <div class="mb-3">
                                 <label for="player-email" class="form-label">Email</label>
-                                <InputText @bind-Value="email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@isLoading" />
-                                <ValidationMessage For="@(() => loginRequest.Email)" class="text-danger" />
+                                <InputText @bind-Value="viewModel.Email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@viewModel.IsLoading" />
+                                <ValidationMessage For="@(() => viewModel.Email)" class="text-danger" />
                             </div>
                             <div class="mb-3">
                                 <label for="player-password" class="form-label">Password</label>
-                                <InputText type="password" @bind-Value="password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@isLoading" />
-                                <ValidationMessage For="@(() => loginRequest.Password)" class="text-danger" />
+                                <InputText type="password" @bind-Value="viewModel.Password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@viewModel.IsLoading" />
+                                <ValidationMessage For="@(() => viewModel.Password)" class="text-danger" />
                             </div>
-                            <button type="submit" class="btn btn-primary w-100" disabled="@isLoading">
-                                @if (isLoading)
+                            <button type="submit" class="btn btn-primary w-100" disabled="@viewModel.IsLoading">
+                                @if (viewModel.IsLoading)
                                 {
                                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                                     <span>Signing In...</span>
@@ -64,13 +66,7 @@
 </div>
 
 @code {
-    private string email = string.Empty;
-    private string password = string.Empty;
-    private string? errorMessage;
-    private bool isLoading;
-
-    // Create the DTO dynamically for validation
-    private LoginRequestDto loginRequest => new(email, password);
+    private PlayerLoginViewModel viewModel = new();
 
     protected override void OnInitialized()
     {
@@ -86,23 +82,22 @@
 
     private async Task HandleLogin()
     {
-        isLoading = true;
-        errorMessage = null;
+        viewModel.SetLoading(true);
         StateHasChanged();
 
         try
         {
-            await AppState.DispatchLoadingStateAsync(true);
+            AppState.DispatchLoadingStateAsync(true);
             
-            var result = await ApiService.PlayerLoginAsync(loginRequest);
+            var result = await ApiService.PlayerLoginAsync(viewModel.ToLoginRequest());
             
             if (result != null)
             {
                 // Verify the user is actually a player
                 if (result.User is not PlayerDto)
                 {
-                    errorMessage = "Invalid credentials or account type. Please use the correct login page.";
-                    await AppState.DispatchErrorAsync(errorMessage);
+                    viewModel.SetError("Invalid credentials or account type. Please use the correct login page.");
+                    await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
                     return;
                 }
 
@@ -114,19 +109,19 @@
             }
             else
             {
-                errorMessage = "Invalid email or password. Please try again.";
-                await AppState.DispatchErrorAsync(errorMessage);
+                viewModel.SetError("Invalid email or password. Please try again.");
+                await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
             }
         }
         catch (Exception)
         {
-            errorMessage = "An error occurred during login. Please try again.";
-            await AppState.DispatchErrorAsync(errorMessage);
+            viewModel.SetError("An error occurred during login. Please try again.");
+            await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
         }
         finally
         {
-            isLoading = false;
-            await AppState.DispatchLoadingStateAsync(false);
+            viewModel.SetLoading(false);
+            AppState.DispatchLoadingStateAsync(false);
             StateHasChanged();
         }
     }

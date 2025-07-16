@@ -92,7 +92,7 @@
 
         try
         {
-            await AppState.DispatchLoadingStateAsync(true);
+            AppState.DispatchLoadingStateAsync(true);
             
             var result = await ApiService.AgentLoginAsync(loginRequest);
             
@@ -126,7 +126,7 @@
         finally
         {
             isLoading = false;
-            await AppState.DispatchLoadingStateAsync(false);
+            AppState.DispatchLoadingStateAsync(false);
             StateHasChanged();
         }
     }
