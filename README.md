@@ -213,6 +213,16 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.34.0 - GetUnresolvedTicketsAsync API Optimization
+- **CustomerServiceApp.Web v1.34.0**: Enhanced API efficiency for agent ticket operations
+
+#### 🚀 **NEW FEATURES**:
+- **GetUnresolvedTicketsAsync Method**:
+  - Added dedicated API method in `ApiService` for retrieving unresolved tickets specifically for agents
+  - Direct call to `/api/tickets/unresolved` endpoint eliminating unnecessary client-side filtering
+  - Improved performance by reducing data transfer and processing overhead
+  - Enhanced separation of concerns with server-side filtering for agent-specific operations
+
 ### Version 1.33.0 - AgentTickets Page Component Integration
 - **CustomerServiceApp.Web v1.33.0**: Updated AgentTickets page to use extracted components for consistency and maintainability
 
@@ -222,20 +232,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Uses MessageCard component for message rendering
   - Employs MessageReplyInput component for reply functionality
   - Unified state management using AppStateStore
-
-#### 🔧 **AGENT-SPECIFIC ENHANCEMENTS**:
-- **Ticket Resolution**: Added "Mark as Resolved" button for agents to close tickets
-- **Agent Branding**: Green theme for loading spinners and success states
-- **Unresolved Focus**: Automatically filters to show only unresolved tickets
-- **Auto-Selection**: Smart ticket selection after resolution actions
-- **Enhanced Logging**: Agent-specific context in all log messages
-
-#### 🏗️ **ARCHITECTURAL IMPROVEMENTS**:
-- **Code Reuse**: Eliminated ~200 lines of duplicate code through component reuse
-- **Consistency**: Both player and agent interfaces now share the same component foundation
-- **Maintainability**: Single source of truth for ticket display, message rendering, and reply input
-- **State Management**: Proper integration with AppStateStore for real-time updates
-- **Error Handling**: Comprehensive error handling with user-friendly messages
 
 #### ⚠️ **BREAKING CHANGES**:
 - Integration tests require updating to match new component-based architecture
@@ -252,13 +248,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Shows ticket title, status badge, creator info, and avatar
   - Proper date formatting for creation and last update times
   - Click handling with custom callback support
-  - Comprehensive unit test coverage (5 test scenarios)
-
-#### 🔧 **IMPROVEMENTS**:
-- **Code Reusability**: TicketListItem can now be shared across multiple pages
-- **Maintainability**: Centralized ticket item rendering logic
-- **Testing**: Full bUnit test coverage for component behavior
-- **Consistency**: Unified ticket item appearance across the application
 
 ### Version 1.31.0 - MessageCard Component Extraction
 - **CustomerServiceApp.Web v1.31.0**: Extracted reusable MessageCard component for message display
@@ -272,13 +261,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Consistent message formatting with proper date display
   - Eliminates code duplication across pages
 
-#### 🛠️ **CODE IMPROVEMENTS**:
-- **Component Extraction**: Moved message display logic from PlayerTickets.razor to reusable component
-- **Consistent UI**: Standardized message appearance across all pages
-- **Code Deduplication**: Removed duplicate HTML/CSS for message cards
-- **Future-Ready**: Component available for use in AgentTickets and other pages
-- **Clean Architecture**: Follows single responsibility principle
-
 ### Version 1.30.0 - Simplified MessageReplyInput Component
 - **CustomerServiceApp.Web v1.30.0**: Simplified MessageReplyInput component focusing on essential functionality
 
@@ -290,13 +272,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Automatic avatar display based on AppStateStore.CurrentUser data
   - Built-in loading state management from AppStateStore.IsLoading
 
-#### 🛠️ **CODE IMPROVEMENTS**:
-- **Simplified Architecture**: Removed overfitted parameters designed for incompatible page structures
-- **AppStateStore Integration**: Component properly leverages centralized state management
-- **Single Responsibility**: Component focuses solely on reply input functionality
-- **Future-Ready**: Prepared for AgentTickets page revamp with consistent component structure
-- **Clean Parameters**: Eliminated redundant parameters (ShowUserAvatar, AvatarIconClass, PlaceholderText, etc.)
-
 ### Version 1.29.0 - MessageReplyInput Component Extraction
 - **CustomerServiceApp.Web v1.29.0**: Extracted reusable MessageReplyInput component for code deduplication
 
@@ -307,12 +282,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Dual callback architecture: OnSendReply (async) for PlayerTickets, OnSendReplyAction (sync) for AgentTickets
   - Configurable avatar display: ShowUserAvatar parameter switches between user avatar and custom icons
   - Parameterized styling: AvatarIconClass, AvatarIconColor, and PlaceholderText for page-specific customization
-
-#### 🛠️ **CODE IMPROVEMENTS**:
-- **Code Deduplication**: Eliminated duplicate HTML structure between PlayerTickets and AgentTickets reply sections
-- **Enhanced Reusability**: Single component handles both ticket page contexts with appropriate parameterization
-- **Maintained Functionality**: Preserved all existing features including loading states, form validation, and disabled states
-- **Flexible Integration**: Component adapts to different page architectures without breaking existing functionality
 
 ### Version 1.17.0 - Enhanced Player UX & Role-Based UI Controls
 - **CustomerServiceApp.Web v1.17.0**: Improved player experience with proper role-based interface design
@@ -334,11 +303,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 - **Improved Data Consistency**: Enhanced reply refresh logic maintains both ticket list and detail view synchronization
 - **Fallback Error Handling**: Robust fallback to SelectTicket method when API responses are unexpected
 
-#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
-- **Optimized API Usage**: Consistent use of player-specific endpoints throughout the reply workflow
-- **Enhanced State Management**: Proper loading state coordination between UI controls and backend operations
-- **Error Recovery**: Comprehensive error handling with graceful degradation
-
 ### Version 1.16.0 - Player-Specific API Integration & Enhanced Security
 - **CustomerServiceApp.Web v1.16.0**: Enhanced player experience with optimized ticket loading
 
@@ -348,23 +312,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Updated `PlayerTickets.razor` to use `/api/tickets/player/{playerId}` endpoint instead of generic tickets endpoint
   - Enhanced security by ensuring players only fetch their own tickets at the API level
   - Improved performance by reducing data transfer (TicketSummaryDto vs full TicketDto for list view)
-
-- **Smart Ticket Detail Loading**:
-  - List view loads lightweight `TicketSummaryDto` for optimal performance
-  - Detail view dynamically fetches full `TicketDto` with messages when ticket is selected
-  - Enhanced `SelectTicket()` method with proper loading states and error handling
-  - Seamless user experience with progressive data loading
-
-#### 🛡️ **SECURITY ENHANCEMENTS**:
-- **Player Authorization Validation**: Current user validation before API calls with automatic redirect to login if unauthenticated
-- **Role-Based Data Access**: Players now use dedicated player-specific endpoints enforcing server-side authorization
-- **Reduced Attack Surface**: Elimination of access to generic ticket endpoints from player interface
-
-#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
-- **DTO Conversion Strategy**: Automatic conversion from TicketSummaryDto to TicketDto for AppState compatibility
-- **Progressive Loading Pattern**: List view for browsing, detail view for interaction - optimal data loading strategy
-- **Enhanced Error Handling**: Comprehensive error handling in both ticket list loading and detail fetching
-- **State Management**: Proper loading state management during ticket selection operations
 
 ### Version 1.15.0 - Enhanced Player Experience & Direct DTO Usage
 - **CustomerServiceApp.Web v1.10.0**: Added logout functionality and simplified authentication models
@@ -379,42 +326,11 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - One-click logout with automatic navigation back to player login page
   - Proper state cleanup using `DispatchLogoutAsync()` for session management
 
-- **Simplified Authentication Architecture**:
-  - Eliminated unnecessary `LoginModel` wrapper class for cleaner code structure
-  - Direct `LoginRequestDto` usage in login forms with proper validation
-  - Removed redundant Models namespace and folder structure
-  - Maintained all validation attributes (`[Required]`, `[EmailAddress]`, `[MinLength]`) with Blazor forms
-
-- **Complete Async State Management**: 
-  - ALL dispatch methods now async: `DispatchLoginAsync()`, `DispatchLogoutAsync()`, `DispatchLoadingStateAsync()`, `DispatchErrorAsync()`, `DispatchSuccessMessageAsync()`, `DispatchTicketsLoadedAsync()`, `DispatchSelectTicketAsync()`, `DispatchTicketCreatedAsync()`, `DispatchTicketUpdatedAsync()`, `DispatchClearMessagesAsync()`
-  - Proper async/await patterns for all state persistence operations across all features
-  - UI components updated to use async dispatch methods for enhanced error handling and reliability
-  - Backward compatibility maintained with synchronous methods marked as obsolete for gradual migration
-  - Improved persistence reliability by awaiting storage operations instead of fire-and-forget for all state changes
-
 - **Local Storage Persistence**: 
   - Automatic persistence of authentication state (user, token, expiration) to browser local storage
   - State restoration on application startup with automatic token expiration handling
   - Graceful error handling for storage failures and invalid data
   - Authorization header restoration for seamless API integration
-
-#### 🛡️ **OBSERVABILITY & LOGGING**:
-- **Comprehensive Exception Logging**: 
-  - Structured logging using `ILogger<AppStateStore>` for all storage operations
-  - Warning-level logs for JSON deserialization errors with detailed context
-  - Exception logging for storage access failures with descriptive messages
-  - Production-ready error handling with proper logging for debugging
-
-#### 🏗️ **INFRASTRUCTURE**:
-- **LocalStorageService**: JavaScript interop service for browser local storage access with error handling
-- **AppStateStore Enhancement**: Integrated local storage persistence with existing Redux pattern and logger dependency injection
-- **App Component Initialization**: State loading on application startup with API authorization setup
-- **Async Method Pattern**: Consistent async/await patterns across all state management operations
-
-#### 🧪 **TESTING**:
-- **Comprehensive Unit Tests**: 9 total test cases covering all local storage scenarios including logging verification
-- **Mock-based Testing**: Proper mocking of IJSRuntime, ILocalStorageService, and ILogger for isolated testing
-- **Edge Case Coverage**: Token expiration, invalid data, null data handling, and exception logging validation
 
 ### Version 1.10.1 - Blazor Component Lifecycle Fixes
 - **CustomerServiceApp.Web v1.4.1**: Fixed production runtime errors with proper lifecycle management
@@ -425,12 +341,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Replaced `OnInitialized` with `OnAfterRender` to ensure single event subscription per component instance
   - Eliminated async warnings by removing unnecessary async/await in authentication check methods
   - Proper disposal pattern with `IDisposable` implementation for event unsubscription
-
-#### 🏗️ **STABILITY IMPROVEMENTS**:
-- **Component Event Management**: Thread-safe event subscription with `_isSubscribed` flag tracking
-- **Lifecycle Optimization**: First-render-only initialization prevents duplicate operations
-- **Memory Management**: Proper event cleanup in Dispose method to prevent memory leaks
-- **Authentication Flow**: Seamless user redirection after component initialization without runtime errors
 
 ### Version 1.10.0 - App State Management & Functional Authentication
 - **CustomerServiceApp.Web v1.4.0**: Complete Redux-pattern state management and functional sign-in implementation
@@ -455,20 +365,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Error handling and null-safe API responses
   - Support for all authentication and ticket operations
 
-#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
-- **Clean Architecture Compliance**: Services registered in DI container following SOLID principles
-- **State Management**: Immutable state with event-driven updates and proper component lifecycle management
-- **Form Handling**: Blazor EditForm with validation, error display, and user feedback
-- **Navigation**: Role-based redirection after successful authentication
-- **Error Handling**: Comprehensive try-catch with user-friendly error messages
-
-#### 🎨 **UI/UX ENHANCEMENTS**:
-- Modern form styling with Bootstrap cards and validation feedback
-- Loading indicators with disabled states during operations
-- Demo user credentials displayed for easy testing
-- Responsive design with proper mobile support
-- Role-specific color schemes (primary for players, success for agents)
-
 ### Version 1.9.0 - EF Core Infrastructure & Repository Pattern Completion
 - **CustomerServiceApp.API v1.7.0**: Enhanced ticket reply functionality with proper EF Core integration
 - **CustomerServiceApp.Application v1.9.0**: Comprehensive reply handling with balanced domain/repository approach
@@ -485,13 +381,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - `ReplyRepository` implementation with EF Core Include statements for Author navigation
   - Unit of Work coordination across Tickets, Users, and Replies repositories
   - Consistent async operations pattern across all repository implementations
-
-#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
-- **Balanced Domain/Repository Approach**: 
-  - `TicketService.AddReplyAsync` preserves domain logic with `ticket.AddReply(reply)` for business rules
-  - Repository operations handle persistence with proper EF Core tracking
-  - Maintains ticket status transitions (Open → InResolution) when agents reply
-  - Clean separation between business logic and data access concerns
 
 ### Version 1.8.0 - Complete JWT Authentication & Authorization System
 - **CustomerServiceApp.API v1.6.0**: Production-ready JWT authentication and authorization with comprehensive security
@@ -517,26 +406,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
   - Development seed data with 3 players, 1 agent, and sample tickets
   - In-memory Entity Framework Core with proper relationship mapping
   - Production-ready configuration with environment-based seeding
-
-#### 🔒 **SECURITY ENHANCEMENTS**:
-- **PBKDF2 Password Hashing**: Cryptographically secure password storage with configurable salt and iterations
-- **JWT Security**: HS256 algorithm with configurable secret keys and expiration times
-- **Role Segregation**: Complete separation between player and agent authentication flows
-- **Request Validation**: Comprehensive model validation and error handling
-- **Structured Logging**: Security audit trail for all authentication attempts and failures
-
-#### 📐 **CLEAN ARCHITECTURE IMPROVEMENTS**:
-- **Feature-Based Organization**: Interfaces organized by domain features (Users, Tickets, Authentication)
-- **Dependency Injection**: Complete DI configuration for all services and repositories
-- **Single Responsibility**: Authentication logic properly separated from user services
-- **Interface Segregation**: Focused interfaces for each domain service
-
-#### 🛠 **TECHNICAL IMPROVEMENTS**:
-- **JWT Token Service**: Complete token generation, validation, and user extraction
-- **Authentication Service**: Secure login with password verification and role validation
-- **Enhanced Controllers**: Comprehensive logging and proper HTTP status code responses
-- **Error Handling**: Proper exception handling with appropriate HTTP responses
-- **Configuration Management**: User secrets support for secure development configuration
 
 ### Version 1.3.2
 - **CustomerServiceApp.Infrastructure v1.1.2**: Fixed validation annotations for security options
