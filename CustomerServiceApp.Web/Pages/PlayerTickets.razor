@@ -1,9 +1,18 @@
 @page "/player/tickets"
 @layout TicketLayout
+@using CustomerServiceApp.Web.Services
+@using CustomerServiceApp.Web.State
+@using CustomerServiceApp.Application.Tickets
+@using CustomerServiceApp.Application.Common.DTOs
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
 @inject NavigationManager Navigation
 @inject AppStateStore AppState
+@inject ApiService ApiService
+@inject ILogger<PlayerTickets> Logger
+@implements IDisposable
 
-<PageTitle>My Support Tickets</PageTitle>
+
 
 <div class="container-fluid h-100">
     <div class="row h-100">
@@ -24,23 +33,51 @@
                 
                 <!-- Ticket List -->
                 <div class="flex-grow-1 overflow-auto">
-                    @foreach (var ticket in TicketList)
+                    @if (isLoading)
                     {
-                        <div class="ticket-list-item p-3 border-bottom @(ticket.Id == selectedTicketId ? "selected" : "")" 
-                             @onclick="() => SelectTicket(ticket.Id)">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div class="flex-grow-1 me-3">
-                                    <h6 class="mb-1 text-truncate">@ticket.Title</h6>
-                                    <div class="small text-muted">
-                                        <div>@ticket.PlayerName</div>
-                                        <div>@ticket.PlayerId • @ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
-                                    </div>
-                                </div>
-                                <div class="avatar-placeholder">
-                                    <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                </div>
+                        <div class="p-3 text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <div class="mt-2">Loading tickets...</div>
+                        </div>
+                    }
+                    else if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="p-3">
+                            <div class="alert alert-danger">
+                                @errorMessage
                             </div>
                         </div>
+                    }
+                    else if (!TicketList.Any())
+                    {
+                        <div class="p-3 text-center text-muted">
+                            <i class="bi bi-inbox fs-1"></i>
+                            <div class="mt-2">No tickets found</div>
+                            <div class="small">Create your first ticket to get started</div>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var ticket in TicketList)
+                        {
+                            <div class="ticket-list-item p-3 border-bottom @(ticket.Id == selectedTicket?.Id ? "selected" : "")" 
+                                 @onclick="() => SelectTicket(ticket.Id)">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1 me-3">
+                                        <h6 class="mb-1 text-truncate">@ticket.Title</h6>
+                                        <div class="small text-muted">
+                                            <div>@ticket.Creator.Name</div>
+                                            <div>@ticket.Creator.PlayerNumber • @ticket.CreatedDate.ToString("MMM dd, yyyy")</div>
+                                        </div>
+                                    </div>
+                                    <div class="avatar-placeholder">
+                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        }
                     }
                 </div>
             </div>
@@ -66,8 +103,8 @@
                                 <p class="card-text">@selectedTicket.Description</p>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="small text-muted">
-                                        <div>@selectedTicket.PlayerName</div>
-                                        <div>@selectedTicket.PlayerId • @selectedTicket.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
+                                        <div>@selectedTicket.Creator.Name</div>
+                                        <div>@selectedTicket.Creator.PlayerNumber • @selectedTicket.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
                                     </div>
                                     <div class="avatar-placeholder">
                                         <i class="bi bi-person-circle fs-4 text-primary"></i>
@@ -79,25 +116,36 @@
                     
                     <!-- Messages Area -->
                     <div class="flex-grow-1 overflow-auto p-3">
-                        @foreach (var message in selectedTicket.Messages)
+                        @if (selectedTicket.Messages.Any())
                         {
-                            <div class="message-item mb-3">
-                                <div class="card @(message.IsFromAgent ? "border-success" : "border-primary")">
-                                    <div class="card-body">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div class="flex-grow-1">
-                                                <p class="card-text">@message.Content</p>
-                                                <div class="small text-muted">
-                                                    <div>@(message.IsFromAgent ? "CS Agent" : message.SenderName)</div>
-                                                    <div>@message.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
+                            @foreach (var message in selectedTicket.Messages)
+                            {
+                                var isFromAgent = message.Author.UserType == "Agent";
+                                <div class="message-item mb-3">
+                                    <div class="card @(isFromAgent ? "border-success" : "border-primary")">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start">
+                                                <div class="flex-grow-1">
+                                                    <p class="card-text">@message.Content</p>
+                                                    <div class="small text-muted">
+                                                        <div>@(isFromAgent ? "CS Agent" : message.Author.Name)</div>
+                                                        <div>@message.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div class="avatar-placeholder ms-3">
-                                                <i class="bi bi-@(message.IsFromAgent ? "shield-fill" : "person-circle") fs-4 @(message.IsFromAgent ? "text-success" : "text-primary")"></i>
+                                                <div class="avatar-placeholder ms-3">
+                                                    <i class="bi bi-@(isFromAgent ? "shield-fill" : "person-circle") fs-4 @(isFromAgent ? "text-success" : "text-primary")"></i>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center text-muted">
+                                <i class="bi bi-chat-text fs-1"></i>
+                                <p>No messages yet. Start the conversation!</p>
                             </div>
                         }
                     </div>
@@ -133,115 +181,79 @@
 </div>
 
 @code {
-    private int? selectedTicketId;
-    private TicketViewModel? selectedTicket => TicketList.FirstOrDefault(t => t.Id == selectedTicketId);
     private string replyText = "";
+    private bool isLoading = true;
+    private string? errorMessage;
 
-    // Sample data - only current player's tickets
-    private List<TicketViewModel> TicketList => AllTickets.Where(t => t.PlayerId == CurrentPlayerId).ToList();
-    private string CurrentPlayerId = "987654"; // Demo: Logged in as Jane Doe
+    // Get current player ID from app state
+    private string CurrentPlayerId => AppState.GetState().CurrentUser?.Id.ToString() ?? "";
 
-    private List<TicketViewModel> AllTickets = new()
+    // Get tickets from app state instead of mock data
+    private IReadOnlyList<TicketDto> TicketList => AppState.GetState().Tickets;
+
+    // Get selected ticket from app state
+    private TicketDto? selectedTicket => AppState.GetState().SelectedTicket;
+
+    protected override async Task OnInitializedAsync()
     {
-        new TicketViewModel
+        // Subscribe to state changes
+        AppState.StateChanged += OnStateChanged;
+        
+        try
         {
-            Id = 1,
-            Title = "Can't load the game",
-            Description = "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.",
-            PlayerName = "Jane Doe",
-            PlayerId = "987654",
-            CreatedDate = DateTime.Now.AddDays(-2),
-            Status = "Open",
-            Messages = new()
+            // Set loading state
+            AppState.DispatchLoadingStateAsync(true);
+            
+            // Fetch tickets from server
+            var tickets = await ApiService.GetTicketsAsync();
+            
+            // Store tickets in app state
+            await AppState.DispatchTicketsLoadedAsync(tickets);
+            
+            // Auto-select first ticket if available
+            var firstTicket = tickets.FirstOrDefault();
+            if (firstTicket != null)
             {
-                new MessageViewModel 
-                { 
-                    Content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer posuere erat a ante.",
-                    SenderName = "CS Agent",
-                    IsFromAgent = true,
-                    CreatedDate = DateTime.Now.AddDays(-1)
-                },
-                new MessageViewModel 
-                { 
-                    Content = "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est.",
-                    SenderName = "Jane Doe",
-                    IsFromAgent = false,
-                    CreatedDate = DateTime.Now.AddHours(-2)
-                }
+                await AppState.DispatchSelectTicketAsync(firstTicket);
             }
-        },
-        new TicketViewModel
-        {
-            Id = 2,
-            Title = "Refund request",
-            Description = "Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est.",
-            PlayerName = "Jane Doe",
-            PlayerId = "987654",
-            CreatedDate = DateTime.Now.AddDays(-3),
-            Status = "In Resolution",
-            Messages = new()
-        },
-        new TicketViewModel
-        {
-            Id = 3,
-            Title = "Account recovery",
-            Description = "Qui dolorem ipsum quia dolor sit amet, consectetur.",
-            PlayerName = "John Smith",
-            PlayerId = "654321",
-            CreatedDate = DateTime.Now.AddDays(-5),
-            Status = "Open",
-            Messages = new()
-        },
-        new TicketViewModel
-        {
-            Id = 4,
-            Title = "Can't load the game",
-            Description = "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident.",
-            PlayerName = "Jane Smith",
-            PlayerId = "456789",
-            CreatedDate = DateTime.Now.AddDays(-1),
-            Status = "Open",
-            Messages = new()
-        },
-        new TicketViewModel
-        {
-            Id = 5,
-            Title = "Payment issue",
-            Description = "Payment was charged but game access not granted.",
-            PlayerName = "Mike Johnson",
-            PlayerId = "123456",
-            CreatedDate = DateTime.Now.AddDays(-4),
-            Status = "Open",
-            Messages = new()
-        },
-        new TicketViewModel
-        {
-            Id = 6,
-            Title = "Another player ticket",
-            Description = "This ticket belongs to another player and should not be visible.",
-            PlayerName = "Different Player",
-            PlayerId = "999999",
-            CreatedDate = DateTime.Now.AddDays(-1),
-            Status = "Open",
-            Messages = new()
+            
+            isLoading = false;
         }
-    };
-
-    protected override void OnInitialized()
-    {
-        // Auto-select first ticket
-        selectedTicketId = TicketList.FirstOrDefault()?.Id;
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to load tickets for player {PlayerId}", CurrentPlayerId);
+            errorMessage = "Failed to load tickets. Please try again.";
+            isLoading = false;
+            AppState.DispatchLoadingStateAsync(false);
+        }
     }
 
-    private void SelectTicket(int ticketId)
+    private async void OnStateChanged()
     {
-        selectedTicketId = ticketId;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private void CreateNewTicket()
+    private async Task SelectTicket(Guid ticketId)
     {
-        // TODO: Implement new ticket creation
-        Console.WriteLine("Create new ticket clicked");
+        var ticket = TicketList.FirstOrDefault(t => t.Id == ticketId);
+        if (ticket != null)
+        {
+            await AppState.DispatchSelectTicketAsync(ticket);
+        }
+    }
+
+    private async Task CreateNewTicket()
+    {
+        try
+        {
+            // Navigate to new ticket creation page
+            Navigation.NavigateTo("/player/tickets/new");
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to navigate to new ticket page");
+            await AppState.DispatchErrorAsync("Failed to create new ticket. Please try again.");
+        }
     }
 
     private async Task LogoutPlayer()
@@ -250,50 +262,78 @@
         Navigation.NavigateTo("/player/login", replace: true);
     }
 
-    private void ResolveTicket()
+    private async Task ResolveTicket()
     {
         if (selectedTicket != null)
         {
-            selectedTicket.Status = "Resolved";
-            // TODO: Implement resolve ticket logic
-            Console.WriteLine($"Resolve ticket {selectedTicket.Id}");
-        }
-    }
-
-    private void SendReply()
-    {
-        if (!string.IsNullOrWhiteSpace(replyText) && selectedTicket != null)
-        {
-            selectedTicket.Messages.Add(new MessageViewModel
+            try
             {
-                Content = replyText,
-                SenderName = selectedTicket.PlayerName,
-                IsFromAgent = false,
-                CreatedDate = DateTime.Now
-            });
-            replyText = "";
-            // TODO: Implement send reply logic
+                AppState.DispatchLoadingStateAsync(true);
+                
+                // Call API to resolve ticket
+                await ApiService.ResolveTicketAsync(selectedTicket.Id);
+                
+                // Update ticket status in state
+                var updatedTicket = selectedTicket with { Status = "Resolved" };
+                await AppState.DispatchTicketUpdatedAsync(updatedTicket);
+                
+                AppState.DispatchLoadingStateAsync(false);
+                Logger.LogInformation("Ticket {TicketId} resolved successfully", selectedTicket.Id);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to resolve ticket {TicketId}", selectedTicket.Id);
+                await AppState.DispatchErrorAsync("Failed to resolve ticket. Please try again.");
+                AppState.DispatchLoadingStateAsync(false);
+            }
         }
     }
 
-    // View Models
-    public class TicketViewModel
+    private async Task SendReply()
     {
-        public int Id { get; set; }
-        public string Title { get; set; } = "";
-        public string Description { get; set; } = "";
-        public string PlayerName { get; set; } = "";
-        public string PlayerId { get; set; } = "";
-        public DateTime CreatedDate { get; set; }
-        public string Status { get; set; } = "";
-        public List<MessageViewModel> Messages { get; set; } = new();
+        if (!string.IsNullOrWhiteSpace(replyText) && selectedTicket != null && AppState.GetState().CurrentUser != null)
+        {
+            try
+            {
+                AppState.DispatchLoadingStateAsync(true);
+                
+                // Create reply DTO
+                var createReplyDto = new CreateReplyDto(
+                    replyText,
+                    AppState.GetState().CurrentUser!.Id,
+                    selectedTicket.Id);
+                
+                // Call API to add reply
+                await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
+                
+                // Clear reply text
+                replyText = "";
+                
+                // Refresh ticket data to get updated messages
+                var tickets = await ApiService.GetTicketsAsync();
+                await AppState.DispatchTicketsLoadedAsync(tickets);
+                
+                // Maintain selected ticket
+                var updatedSelectedTicket = tickets.FirstOrDefault(t => t.Id == selectedTicket.Id);
+                if (updatedSelectedTicket != null)
+                {
+                    await AppState.DispatchSelectTicketAsync(updatedSelectedTicket);
+                }
+                
+                AppState.DispatchLoadingStateAsync(false);
+                Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to send reply for ticket {TicketId}", selectedTicket.Id);
+                await AppState.DispatchErrorAsync("Failed to send reply. Please try again.");
+                AppState.DispatchLoadingStateAsync(false);
+            }
+        }
     }
 
-    public class MessageViewModel
+    public void Dispose()
     {
-        public string Content { get; set; } = "";
-        public string SenderName { get; set; } = "";
-        public bool IsFromAgent { get; set; }
-        public DateTime CreatedDate { get; set; }
+        AppState.StateChanged -= OnStateChanged;
     }
 }
