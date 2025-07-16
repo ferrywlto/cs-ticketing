@@ -102,8 +102,9 @@
                 <div class="d-flex flex-column h-100">
                     <!-- Ticket Header -->
                     <div class="p-3 border-bottom">
-                        <div class="mb-3">
+                        <div class="mb-3 d-flex align-items-center gap-2">
                             <h4 class="mb-0">@selectedTicket.Title</h4>
+                            <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
                         </div>
                         
                         <!-- Ticket Description Card -->
@@ -185,38 +186,50 @@
                     </div>
                     
                     <!-- Reply Section -->
-                    <div class="p-3 border-top">
-                        <div class="d-flex align-items-start">
-                            <div class="avatar-placeholder me-3">
-                                @{
-                                    var currentUser = AppState.GetState()?.CurrentUser;
-                                }
-                                @if (!string.IsNullOrEmpty(currentUser?.Avatar))
-                                {
-                                    <img src="@currentUser.Avatar" alt="@(currentUser?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                }
-                                else
-                                {
-                                    <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                }
-                            </div>
-                            <div class="flex-grow-1">
-                                <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText" disabled="@(AppState.GetState()?.IsLoading ?? false)"></textarea>
-                                <button class="btn btn-primary" @onclick="SendReply" disabled="@(string.IsNullOrWhiteSpace(replyText) || AppState.GetState()?.IsLoading == true)">
-                                    @if (AppState.GetState()?.IsLoading == true)
+                    @if (selectedTicket.Status != "Resolved")
+                    {
+                        <div class="p-3 border-top">
+                            <div class="d-flex align-items-start">
+                                <div class="avatar-placeholder me-3">
+                                    @{
+                                        var currentUser = AppState.GetState()?.CurrentUser;
+                                    }
+                                    @if (!string.IsNullOrEmpty(currentUser?.Avatar))
                                     {
-                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                        <span>Sending...</span>
+                                        <img src="@currentUser.Avatar" alt="@(currentUser?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
                                     }
                                     else
                                     {
-                                        <i class="bi bi-send"></i>
-                                        <span>Send</span>
+                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
                                     }
-                                </button>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText" disabled="@(AppState.GetState()?.IsLoading ?? false)"></textarea>
+                                    <button class="btn btn-primary" @onclick="SendReply" disabled="@(string.IsNullOrWhiteSpace(replyText) || AppState.GetState()?.IsLoading == true)">
+                                        @if (AppState.GetState()?.IsLoading == true)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                            <span>Sending...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-send"></i>
+                                            <span>Send</span>
+                                        }
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
+                    else
+                    {
+                        <div class="p-3 border-top bg-light text-center">
+                            <div class="text-muted">
+                                <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                This ticket has been resolved and is no longer accepting replies.
+                            </div>
+                        </div>
+                    }
                 </div>
             }
             else
