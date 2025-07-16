@@ -145,13 +145,14 @@ public class TicketsControllerTests
         var response = await _controller.CreateTicket(createDto);
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
-        Assert.Equal("Invalid player authentication", badRequestResult.Value);
+        Assert.Equal("Invalid user authentication", badRequestResult.Value);
     }
 
     [Fact]
     public async Task GetTicket_WithExistingTicket_ReturnsOk()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
         var creatorDto = new PlayerDto(
             Guid.NewGuid(),
             "player@example.com",
@@ -166,6 +167,23 @@ public class TicketsControllerTests
             "Open",
             DateTime.UtcNow,
             DateTime.UtcNow);
+
+        // Setup JWT claims for agent accessing any ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var result = Result<TicketDto>.Success(ticketDto);
         _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
@@ -193,7 +211,202 @@ public class TicketsControllerTests
     }
 
     [Fact]
+    public async Task GetTicket_AsPlayer_AccessingOwnTicket_ReturnsOk()
+    {
+        var playerId = Guid.NewGuid();
+        var ticketId = Guid.NewGuid();
+        var creatorDto = new PlayerDto(
+            playerId,
+            "player@example.com",
+            "Test Player",
+            "P001");
+
+        var ticketDto = new TicketDto(
+            ticketId,
+            "Test Ticket",
+            "Test Description",
+            creatorDto,
+            "Open",
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        // Setup JWT claims for player accessing their own ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, playerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicket(ticketId);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedTicket = Assert.IsType<TicketDto>(okResult.Value);
+        Assert.Equal(ticketId, returnedTicket.Id);
+    }
+
+    [Fact]
+    public async Task GetTicket_AsPlayer_AccessingOtherPlayerTicket_ReturnsUnauthorized()
+    {
+        var requestingPlayerId = Guid.NewGuid();
+        var ticketOwnerPlayerId = Guid.NewGuid(); // Different player ID
+        var ticketId = Guid.NewGuid();
+        var creatorDto = new PlayerDto(
+            ticketOwnerPlayerId,
+            "player@example.com",
+            "Test Player",
+            "P001");
+
+        var ticketDto = new TicketDto(
+            ticketId,
+            "Test Ticket",
+            "Test Description",
+            creatorDto,
+            "Open",
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        // Setup JWT claims for player trying to access another player's ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, requestingPlayerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicket(ticketId);
+
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response.Result);
+        Assert.Equal("Players can only access their own tickets", unauthorizedResult.Value);
+    }
+
+    [Fact]
+    public async Task GetTicket_AsAgent_AccessingAnyTicket_ReturnsOk()
+    {
+        var agentId = Guid.NewGuid();
+        var playerId = Guid.NewGuid();
+        var ticketId = Guid.NewGuid();
+        var creatorDto = new PlayerDto(
+            playerId,
+            "player@example.com",
+            "Test Player",
+            "P001");
+
+        var ticketDto = new TicketDto(
+            ticketId,
+            "Test Ticket",
+            "Test Description",
+            creatorDto,
+            "Open",
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        // Setup JWT claims for agent accessing any ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var result = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicket(ticketId);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedTicket = Assert.IsType<TicketDto>(okResult.Value);
+        Assert.Equal(ticketId, returnedTicket.Id);
+    }
+
+    [Fact]
     public async Task GetTicketsByPlayer_WithExistingPlayer_ReturnsOk()
+    {
+        var playerId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+        var tickets = new List<TicketSummaryDto>
+        {
+            new TicketSummaryDto(
+                Guid.NewGuid(),
+                "Ticket 1",
+                "Description 1",
+                new PlayerDto(
+                    playerId,
+                    "player@example.com",
+                    "Test Player",
+                    "P001"),
+                "Open",
+                DateTime.UtcNow,
+                DateTime.UtcNow,
+                1)
+        };
+
+        // Setup JWT claims for agent accessing any player's tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
+        _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicketsByPlayer(playerId);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedTickets = Assert.IsType<List<TicketSummaryDto>>(okResult.Value);
+        Assert.Single(returnedTickets);
+    }
+
+    [Fact]
+    public async Task GetTicketsByPlayer_AsPlayer_AccessingOwnTickets_ReturnsOk()
     {
         var playerId = Guid.NewGuid();
         var tickets = new List<TicketSummaryDto>
@@ -211,6 +424,105 @@ public class TicketsControllerTests
                 DateTime.UtcNow,
                 DateTime.UtcNow,
                 1)
+        };
+
+        // Setup JWT claims for player accessing their own tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, playerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
+        _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.GetTicketsByPlayer(playerId);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedTickets = Assert.IsType<List<TicketSummaryDto>>(okResult.Value);
+        Assert.Single(returnedTickets);
+    }
+
+    [Fact]
+    public async Task GetTicketsByPlayer_AsPlayer_AccessingOtherPlayerTickets_ReturnsUnauthorized()
+    {
+        var requestingPlayerId = Guid.NewGuid();
+        var targetPlayerId = Guid.NewGuid(); // Different player ID
+
+        // Setup JWT claims for player trying to access another player's tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, requestingPlayerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var response = await _controller.GetTicketsByPlayer(targetPlayerId);
+
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response.Result);
+        Assert.Equal("Players can only access their own tickets", unauthorizedResult.Value);
+        
+        // Verify service was not called
+        _mockTicketService.Verify(s => s.GetPlayerTicketsAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetTicketsByPlayer_AsAgent_AccessingAnyPlayerTickets_ReturnsOk()
+    {
+        var agentId = Guid.NewGuid();
+        var playerId = Guid.NewGuid();
+        var tickets = new List<TicketSummaryDto>
+        {
+            new TicketSummaryDto(
+                Guid.NewGuid(),
+                "Ticket 1",
+                "Description 1",
+                new PlayerDto(
+                    playerId,
+                    "player@example.com",
+                    "Test Player",
+                    "P001"),
+                "Open",
+                DateTime.UtcNow,
+                DateTime.UtcNow,
+                1)
+        };
+
+        // Setup JWT claims for agent accessing any player's tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
         };
 
         var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
@@ -451,6 +763,171 @@ public class TicketsControllerTests
     }
 
     [Fact]
+    public async Task AddReply_AsPlayer_ReplyingToOwnTicket_ReturnsOk()
+    {
+        var ticketId = Guid.NewGuid();
+        var playerId = Guid.NewGuid();
+        var createReplyDto = new CreateReplyDto(
+            "This is a reply",
+            Guid.Empty, // This will be ignored
+            ticketId);
+
+        // Setup JWT claims for player
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, playerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        // Setup ticket retrieval for ownership check
+        var ticketDto = new TicketDto(
+            ticketId,
+            "Test Ticket",
+            "Test Description",
+            new PlayerDto(playerId, "player@example.com", "Test Player", "P001"),
+            "Open",
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        var ticketResult = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(ticketResult);
+
+        var replyDto = new ReplyDto(
+            Guid.NewGuid(),
+            createReplyDto.Content,
+            new PlayerDto(playerId, "player@example.com", "Test Player", "P001"),
+            DateTime.UtcNow);
+
+        var result = Result<ReplyDto>.Success(replyDto);
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, It.Is<CreateReplyDto>(dto => 
+            dto.Content == createReplyDto.Content && 
+            dto.AuthorId == playerId &&
+            dto.TicketId == createReplyDto.TicketId)))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.AddReply(ticketId, createReplyDto);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedReply = Assert.IsType<ReplyDto>(okResult.Value);
+        Assert.Equal(replyDto.Id, returnedReply.Id);
+        Assert.Equal(replyDto.Content, returnedReply.Content);
+    }
+
+    [Fact]
+    public async Task AddReply_AsPlayer_ReplyingToOtherPlayerTicket_ReturnsUnauthorized()
+    {
+        var ticketId = Guid.NewGuid();
+        var requestingPlayerId = Guid.NewGuid();
+        var ticketOwnerPlayerId = Guid.NewGuid(); // Different player ID
+        var createReplyDto = new CreateReplyDto(
+            "This is a reply",
+            Guid.Empty, // This will be ignored
+            ticketId);
+
+        // Setup JWT claims for player trying to reply to another player's ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, requestingPlayerId.ToString()),
+            new(ClaimTypes.Role, "Player")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        // Setup ticket retrieval for ownership check - ticket owned by different player
+        var ticketDto = new TicketDto(
+            ticketId,
+            "Test Ticket",
+            "Test Description",
+            new PlayerDto(ticketOwnerPlayerId, "owner@example.com", "Ticket Owner", "P002"),
+            "Open",
+            DateTime.UtcNow,
+            DateTime.UtcNow);
+
+        var ticketResult = Result<TicketDto>.Success(ticketDto);
+        _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
+                         .ReturnsAsync(ticketResult);
+
+        var response = await _controller.AddReply(ticketId, createReplyDto);
+
+        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(response.Result);
+        Assert.Equal("Players can only reply to their own tickets", unauthorizedResult.Value);
+        
+        // Verify AddReplyAsync was not called since authorization failed
+        _mockTicketService.Verify(s => s.AddReplyAsync(It.IsAny<Guid>(), It.IsAny<CreateReplyDto>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task AddReply_AsAgent_ReplyingToAnyTicket_ReturnsOk()
+    {
+        var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+        var playerId = Guid.NewGuid();
+        var createReplyDto = new CreateReplyDto(
+            "This is a reply",
+            Guid.Empty, // This will be ignored
+            ticketId);
+
+        // Setup JWT claims for agent
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+
+        var replyDto = new ReplyDto(
+            Guid.NewGuid(),
+            createReplyDto.Content,
+            new AgentDto(agentId, "agent@example.com", "CS Agent"),
+            DateTime.UtcNow);
+
+        var result = Result<ReplyDto>.Success(replyDto);
+        _mockTicketService.Setup(s => s.AddReplyAsync(ticketId, It.Is<CreateReplyDto>(dto => 
+            dto.Content == createReplyDto.Content && 
+            dto.AuthorId == agentId &&
+            dto.TicketId == createReplyDto.TicketId)))
+                         .ReturnsAsync(result);
+
+        var response = await _controller.AddReply(ticketId, createReplyDto);
+
+        var okResult = Assert.IsType<OkObjectResult>(response.Result);
+        var returnedReply = Assert.IsType<ReplyDto>(okResult.Value);
+        Assert.Equal(replyDto.Id, returnedReply.Id);
+        Assert.Equal(replyDto.Content, returnedReply.Content);
+        
+        // Verify GetTicketByIdAsync was not called for agents (they can reply to any ticket)
+        _mockTicketService.Verify(s => s.GetTicketByIdAsync(It.IsAny<Guid>()), Times.Never);
+    }
+
+    [Fact]
     public async Task CreateTicket_LogsInformation()
     {
         var playerId = Guid.NewGuid();
@@ -573,6 +1050,7 @@ public class TicketsControllerTests
     public async Task GetTicket_LogsInformation()
     {
         var ticketId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
         var creatorDto = new PlayerDto(
             Guid.NewGuid(),
             "player@example.com",
@@ -589,6 +1067,23 @@ public class TicketsControllerTests
             DateTime.UtcNow,
             null,
             null);
+
+        // Setup JWT claims for agent accessing any ticket
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
 
         var result = Result<TicketDto>.Success(ticketDto);
         _mockTicketService.Setup(s => s.GetTicketByIdAsync(ticketId))
@@ -642,6 +1137,7 @@ public class TicketsControllerTests
     public async Task GetTicketsByPlayer_LogsInformation()
     {
         var playerId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
         var tickets = new List<TicketSummaryDto>
         {
             new TicketSummaryDto(
@@ -657,6 +1153,23 @@ public class TicketsControllerTests
                 DateTime.UtcNow,
                 DateTime.UtcNow,
                 1)
+        };
+
+        // Setup JWT claims for agent accessing any player's tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
         };
 
         var result = Result<IEnumerable<TicketSummaryDto>>.Success(tickets);
@@ -980,13 +1493,32 @@ public class TicketsControllerTests
         var response = await _controller.ResolveTicket(ticketId);
 
         var badRequestResult = Assert.IsType<BadRequestObjectResult>(response.Result);
-        Assert.Equal("Invalid agent authentication", badRequestResult.Value);
+        Assert.Equal("Invalid user authentication", badRequestResult.Value);
     }
 
     [Fact]
     public async Task GetTicketsByPlayer_WithFailure_LogsWarning()
     {
         var playerId = Guid.NewGuid();
+        var agentId = Guid.NewGuid();
+        
+        // Setup JWT claims for agent accessing any player's tickets
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, agentId.ToString()),
+            new(ClaimTypes.Role, "Agent")
+        };
+        var identity = new ClaimsIdentity(claims, "Test");
+        var claimsPrincipal = new ClaimsPrincipal(identity);
+        
+        _controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = claimsPrincipal
+            }
+        };
+        
         var result = Result<IEnumerable<TicketSummaryDto>>.Failure("Player not found");
         _mockTicketService.Setup(s => s.GetPlayerTicketsAsync(playerId))
                          .ReturnsAsync(result);
