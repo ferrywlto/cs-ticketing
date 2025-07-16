@@ -160,13 +160,13 @@
     private string? errorMessage;
 
     // Get current agent ID from app state
-    private string CurrentAgentId => CurrentState?.CurrentUser?.Id.ToString() ?? "";
+    private string CurrentAgentId => AppState.GetState()?.CurrentUser?.Id.ToString() ?? "";
 
     // Get unresolved tickets from app state (API already filters to unresolved tickets for agents)
-    private IReadOnlyList<TicketDto> TicketList => CurrentState?.Tickets ?? new List<TicketDto>().AsReadOnly();
+    private IReadOnlyList<TicketDto> TicketList => AppState.GetState()?.Tickets ?? new List<TicketDto>().AsReadOnly();
 
     // Get selected ticket from app state
-    private TicketDto? selectedTicket => CurrentState?.SelectedTicket;
+    private TicketDto? selectedTicket => AppState.GetState()?.SelectedTicket;
 
     /// <summary>
     /// Gets the CSS class for ticket status badge
@@ -180,13 +180,6 @@
             "Resolved" => "bg-primary text-white",
             _ => "bg-secondary text-white"
         };
-    }
-
-    private AppState? CurrentState { get; set; }
-
-    protected override void OnParametersSet()
-    {
-        CurrentState = AppState.GetState();
     }
 
     protected override async Task OnInitializedAsync()
@@ -240,7 +233,7 @@
         try
         {
             // Check if the clicked ticket is already selected - if so, do nothing
-            var currentSelectedTicket = CurrentState?.SelectedTicket;
+            var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
             if (currentSelectedTicket?.Id == ticketId)
             {
                 Logger.LogDebug("Ticket {TicketId} is already selected, skipping refresh", ticketId);
@@ -275,7 +268,7 @@
 
     private async Task RefreshSelectedTicket()
     {
-        var currentSelectedTicket = CurrentState?.SelectedTicket;
+        var currentSelectedTicket = AppState.GetState()?.SelectedTicket;
         if (currentSelectedTicket == null)
         {
             Logger.LogWarning("No ticket selected for refresh");
