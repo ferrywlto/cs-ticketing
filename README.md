@@ -158,6 +158,34 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.33.0 - AgentTickets Page Component Integration
+- **CustomerServiceApp.Web v1.33.0**: Updated AgentTickets page to use extracted components for consistency and maintainability
+
+#### 🚀 **NEW FEATURES**:
+- **Component-Based Architecture**: AgentTickets now uses the same structure as PlayerTickets
+  - Integrated TicketListItem component for consistent ticket display
+  - Uses MessageCard component for message rendering
+  - Employs MessageReplyInput component for reply functionality
+  - Unified state management using AppStateStore
+
+#### 🔧 **AGENT-SPECIFIC ENHANCEMENTS**:
+- **Ticket Resolution**: Added "Mark as Resolved" button for agents to close tickets
+- **Agent Branding**: Green theme for loading spinners and success states
+- **Unresolved Focus**: Automatically filters to show only unresolved tickets
+- **Auto-Selection**: Smart ticket selection after resolution actions
+- **Enhanced Logging**: Agent-specific context in all log messages
+
+#### 🏗️ **ARCHITECTURAL IMPROVEMENTS**:
+- **Code Reuse**: Eliminated ~200 lines of duplicate code through component reuse
+- **Consistency**: Both player and agent interfaces now share the same component foundation
+- **Maintainability**: Single source of truth for ticket display, message rendering, and reply input
+- **State Management**: Proper integration with AppStateStore for real-time updates
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+
+#### ⚠️ **BREAKING CHANGES**:
+- Integration tests require updating to match new component-based architecture
+- Old static data structure replaced with dynamic API-driven data
+
 ### Version 1.32.0 - TicketListItem Component Extraction
 - **CustomerServiceApp.Web v1.32.0**: Extracted reusable TicketListItem component for ticket list display
 
