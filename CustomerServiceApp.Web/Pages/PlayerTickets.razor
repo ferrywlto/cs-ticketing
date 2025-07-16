@@ -180,10 +180,16 @@
     </div>
 </div>
 
+<!-- New Ticket Modal -->
+<NewTicketModal IsVisible="showNewTicketModal" 
+                OnClose="CloseNewTicketModal" 
+                OnTicketCreated="OnTicketCreated" />
+
 @code {
     private string replyText = "";
     private bool isLoading = true;
     private string? errorMessage;
+    private bool showNewTicketModal = false;
 
     // Get current player ID from app state
     private string CurrentPlayerId => AppState.GetState().CurrentUser?.Id.ToString() ?? "";
@@ -246,13 +252,38 @@
     {
         try
         {
-            // Navigate to new ticket creation page
-            Navigation.NavigateTo("/player/tickets/new");
+            // Show the new ticket modal
+            showNewTicketModal = true;
+            StateHasChanged();
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Failed to navigate to new ticket page");
-            await AppState.DispatchErrorAsync("Failed to create new ticket. Please try again.");
+            Logger.LogError(ex, "Failed to show new ticket modal");
+            await AppState.DispatchErrorAsync("Failed to open new ticket form. Please try again.");
+        }
+    }
+
+    private void CloseNewTicketModal()
+    {
+        showNewTicketModal = false;
+        StateHasChanged();
+    }
+
+    private async Task OnTicketCreated(TicketDto newTicket)
+    {
+        try
+        {
+            // Close the modal
+            showNewTicketModal = false;
+            
+            // Select the newly created ticket
+            await AppState.DispatchSelectTicketAsync(newTicket);
+            
+            Logger.LogInformation("Successfully created and selected new ticket {TicketId}", newTicket.Id);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error handling newly created ticket {TicketId}", newTicket.Id);
         }
     }
 

@@ -1,0 +1,268 @@
+@using CustomerServiceApp.Web.Services
+@using CustomerServiceApp.Web.State
+@using CustomerServiceApp.Application.Common.DTOs
+@using Microsoft.AspNetCore.Components.Web
+@inject ApiService ApiService
+@inject AppStateStore AppState
+@inject ILogger<NewTicketModal> Logger
+
+<!-- Modal -->
+<div class="modal fade @(IsVisible ? "show" : "")" style="display: @(IsVisible ? "block" : "none")" tabindex="-1" role="dialog" @onclick="HandleBackdropClick">
+    <div class="modal-dialog modal-lg" role="document" @onclick:stopPropagation="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Ticket
+                </h5>
+                <button type="button" class="btn-close" @onclick="CloseModal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger">
+                        @errorMessage
+                    </div>
+                }
+                
+                <form @onsubmit="SubmitTicket" @onsubmit:preventDefault="true">
+                    <div class="mb-3">
+                        <label for="ticketTitle" class="form-label">Title <span class="text-danger">*</span></label>
+                        <input type="text" 
+                               class="form-control @(titleValidationClass)" 
+                               id="ticketTitle" 
+                               @bind="title" 
+                               @bind:event="oninput"
+                               @onblur="ValidateTitle"
+                               placeholder="Enter a brief title for your ticket"
+                               maxlength="200"
+                               disabled="@isSubmitting" />
+                        @if (!string.IsNullOrEmpty(titleError))
+                        {
+                            <div class="text-danger small mt-1">@titleError</div>
+                        }
+                        <div class="form-text">@title.Length / 200 characters</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ticketDescription" class="form-label">Description <span class="text-danger">*</span></label>
+                        <textarea class="form-control @(descriptionValidationClass)" 
+                                  id="ticketDescription" 
+                                  rows="5" 
+                                  @bind="description" 
+                                  @bind:event="oninput"
+                                  @onblur="ValidateDescription"
+                                  placeholder="Describe your issue in detail..."
+                                  maxlength="2000"
+                                  disabled="@isSubmitting"></textarea>
+                        @if (!string.IsNullOrEmpty(descriptionError))
+                        {
+                            <div class="text-danger small mt-1">@descriptionError</div>
+                        }
+                        <div class="form-text">@description.Length / 2000 characters</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CloseModal" disabled="@isSubmitting">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="SubmitTicket" disabled="@(!IsFormValid || isSubmitting)">
+                    @if (isSubmitting)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Creating...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-plus-circle me-2"></i>
+                        <span>Create Ticket</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Backdrop -->
+@if (IsVisible)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public bool IsVisible { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<TicketDto> OnTicketCreated { get; set; }
+
+    private string title = "";
+    private string description = "";
+    private string? errorMessage;
+    private string? titleError;
+    private string? descriptionError;
+    private bool isSubmitting = false;
+
+    // Validation properties
+    private bool IsTitleValid => !string.IsNullOrWhiteSpace(title) && title.Length <= 200;
+    private bool IsDescriptionValid => !string.IsNullOrWhiteSpace(description) && description.Length <= 2000;
+    private bool IsFormValid => IsTitleValid && IsDescriptionValid;
+
+    private string titleValidationClass => string.IsNullOrEmpty(titleError) ? "" : "is-invalid";
+    private string descriptionValidationClass => string.IsNullOrEmpty(descriptionError) ? "" : "is-invalid";
+
+    protected override void OnParametersSet()
+    {
+        if (!IsVisible)
+        {
+            // Reset form when modal is hidden
+            ClearForm();
+        }
+    }
+
+    private void ValidateTitle()
+    {
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            titleError = "Title is required.";
+        }
+        else if (title.Length > 200)
+        {
+            titleError = "Title cannot exceed 200 characters.";
+        }
+        else
+        {
+            titleError = null;
+        }
+    }
+
+    private void ValidateDescription()
+    {
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            descriptionError = "Description is required.";
+        }
+        else if (description.Length > 2000)
+        {
+            descriptionError = "Description cannot exceed 2000 characters.";
+        }
+        else
+        {
+            descriptionError = null;
+        }
+    }
+
+    private void ValidateForm()
+    {
+        ValidateTitle();
+        ValidateDescription();
+    }
+
+    private async Task SubmitTicket()
+    {
+        if (isSubmitting) return;
+
+        ValidateForm();
+        
+        if (!IsFormValid)
+        {
+            return;
+        }
+
+        try
+        {
+            isSubmitting = true;
+            errorMessage = null;
+
+            // Get current user from app state
+            var currentUser = AppState.GetState().CurrentUser;
+            if (currentUser == null)
+            {
+                errorMessage = "User not authenticated. Please log in again.";
+                return;
+            }
+
+            // Create ticket DTO
+            var createTicketDto = new CreateTicketDto(
+                title.Trim(),
+                description.Trim(),
+                currentUser.Id
+            );
+
+            // Call API to create ticket
+            var createdTicket = await ApiService.CreateTicketAsync(createTicketDto);
+
+            if (createdTicket != null)
+            {
+                // Add the new ticket to app state
+                await AppState.DispatchTicketCreatedAsync(createdTicket);
+                
+                // Notify parent component
+                await OnTicketCreated.InvokeAsync(createdTicket);
+                
+                Logger.LogInformation("Ticket '{Title}' created successfully with ID {TicketId}", 
+                    createdTicket.Title, createdTicket.Id);
+                
+                // Close modal and clear form
+                await CloseModal();
+            }
+            else
+            {
+                errorMessage = "Failed to create ticket. Please try again.";
+                Logger.LogWarning("Failed to create ticket with title '{Title}'", title);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error creating ticket with title '{Title}'", title);
+            errorMessage = "An unexpected error occurred. Please try again.";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task CloseModal()
+    {
+        ClearForm();
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        // Close modal when clicking on backdrop
+        await CloseModal();
+    }
+
+    private void ClearForm()
+    {
+        title = "";
+        description = "";
+        errorMessage = null;
+        titleError = null;
+        descriptionError = null;
+        isSubmitting = false;
+    }
+}
+
+<style>
+    .modal {
+        z-index: 1055;
+    }
+    
+    .modal-backdrop {
+        z-index: 1050;
+    }
+    
+    .form-control.is-invalid {
+        border-color: #dc3545;
+    }
+    
+    .text-danger {
+        color: #dc3545 !important;
+    }
+    
+    .form-text {
+        color: #6c757d;
+        font-size: 0.875em;
+    }
+</style>
