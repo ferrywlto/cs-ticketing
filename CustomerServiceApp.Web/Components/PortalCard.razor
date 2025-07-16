@@ -1,0 +1,82 @@
+@* Portal Selection Card Component *@
+<div class="col-md-5">
+    <div class="card border-0 shadow-lg h-100 hover-card">
+        <div class="card-body text-center p-5">
+            <div class="mb-4">
+                <i class="bi @IconClass @TextColorClass" style="font-size: 4rem;"></i>
+            </div>
+            <h3 class="card-title @TextColorClass mb-3">@Title</h3>
+            <p class="card-text text-muted mb-4">
+                @Description
+            </p>
+            <div class="d-grid gap-2">
+                <a href="@LoginUrl" class="btn @ButtonClass btn-lg rounded-pill">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    @ButtonText
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.hover-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.hover-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+}
+
+.btn-lg {
+    padding: 12px 32px;
+    font-weight: 600;
+}
+
+.card-body i {
+    transition: transform 0.2s ease-in-out;
+}
+
+.hover-card:hover i {
+    transform: scale(1.1);
+}
+</style>
+@code {
+    /// <summary>
+    /// Bootstrap icon class for the portal card
+    /// </summary>
+    [Parameter] public string IconClass { get; set; } = "";
+
+    /// <summary>
+    /// CSS class for text color (e.g., "text-primary", "text-success")
+    /// </summary>
+    [Parameter] public string TextColorClass { get; set; } = "";
+
+    /// <summary>
+    /// Description text for the portal
+    /// </summary>
+    [Parameter] public string Description { get; set; } = "";
+
+    /// <summary>
+    /// URL for the login page
+    /// </summary>
+    [Parameter] public string LoginUrl { get; set; } = "";
+
+    /// <summary>
+    /// CSS class for the button (e.g., "btn-primary", "btn-success")
+    /// </summary>
+    [Parameter] public string ButtonClass { get; set; } = "";
+
+    /// <summary>
+    /// Bootstrap icon class for the button
+    /// </summary>
+    [Parameter] public string ButtonIcon { get; set; } = "";
+
+    /// <summary>
+    /// Role for the card
+    /// </summary>
+    [Parameter] public string Role { get; set; } = "";
+
+    public string ButtonText => Role + " Sign In";
+    public string Title => Role + " Portal";
+}
