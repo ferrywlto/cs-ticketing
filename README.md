@@ -177,6 +177,7 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 - Making the list of message replies in scrollable pane with sticky message reply input at bottom.
 - More robust token authentication and authorization with id, access, and refresh tokens instead of single JWT.
 - Use cloud blob storage to host user's avatar images
+- Generate better OpenApi documentation by adding comprehensive HTTP status code attributes on each API.
 
 ## Screenshots
 
