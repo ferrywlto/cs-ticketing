@@ -102,9 +102,18 @@
                 <div class="d-flex flex-column h-100">
                     <!-- Ticket Header -->
                     <div class="p-3 border-bottom">
-                        <div class="mb-3 d-flex align-items-center gap-2">
-                            <h4 class="mb-0">@selectedTicket.Title</h4>
-                            <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h4 class="mb-0">@selectedTicket.Title</h4>
+                                <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
+                            </div>
+                            @if (selectedTicket.Status == "Resolved" && selectedTicket.ResolvedBy != null && selectedTicket.ResolvedDate.HasValue)
+                            {
+                                <div class="small text-muted">
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                    Resolved by <strong>@selectedTicket.ResolvedBy.Name</strong> on @selectedTicket.ResolvedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                </div>
+                            }
                         </div>
                         
                         <!-- Ticket Description Card -->

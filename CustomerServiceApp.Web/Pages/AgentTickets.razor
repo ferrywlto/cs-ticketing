@@ -44,16 +44,25 @@
                 <div class="d-flex flex-column h-100">
                     <!-- Ticket Header -->
                     <div class="p-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-start mb-3">
-                            <div class="d-flex align-items-center gap-2">
-                                <h4 class="mb-0">@selectedTicket.Title</h4>
-                                <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h4 class="mb-0">@selectedTicket.Title</h4>
+                                    <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
+                                </div>
+                                @if (selectedTicket.Status != "Resolved")
+                                {
+                                    <button class="btn btn-success" @onclick="ResolveTicket">
+                                        <i class="bi bi-check-circle"></i> Resolve
+                                    </button>
+                                }
                             </div>
-                            @if (selectedTicket.Status != "Resolved")
+                            @if (selectedTicket.Status == "Resolved" && !string.IsNullOrEmpty(selectedTicket.ResolvedBy) && selectedTicket.ResolvedDate.HasValue)
                             {
-                                <button class="btn btn-success" @onclick="ResolveTicket">
-                                    <i class="bi bi-check-circle"></i> Resolve
-                                </button>
+                                <div class="small text-muted">
+                                    <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                    Resolved by <strong>@selectedTicket.ResolvedBy</strong> on @selectedTicket.ResolvedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                </div>
                             }
                         </div>
                         
@@ -143,7 +152,7 @@
 
 @code {
     private int? selectedTicketId;
-    private TicketViewModel? selectedTicket => UnresolvedTickets.FirstOrDefault(t => t.Id == selectedTicketId);
+    private TicketViewModel? selectedTicket => AllTickets.FirstOrDefault(t => t.Id == selectedTicketId);
     private string replyText = "";
 
     // Sample data - only unresolved tickets from all players
@@ -220,6 +229,21 @@
             PlayerId = "123456",
             CreatedDate = DateTime.Now.AddDays(-4),
             Status = "Resolved", // This should not show in agent view
+            ResolvedDate = DateTime.Now.AddDays(-3),
+            ResolvedBy = "CS Agent Sarah",
+            Messages = new()
+        },
+        new TicketViewModel
+        {
+            Id = 6,
+            Title = "Password Reset Help",
+            Description = "Unable to reset password using the forgot password feature.",
+            PlayerName = "Emma Davis",
+            PlayerId = "567890", 
+            CreatedDate = DateTime.Now.AddDays(-5),
+            Status = "Resolved",
+            ResolvedDate = DateTime.Now.AddDays(-4),
+            ResolvedBy = "CS Agent Mike",
             Messages = new()
         }
     };
@@ -240,6 +264,8 @@
         if (selectedTicket != null)
         {
             selectedTicket.Status = "Resolved";
+            selectedTicket.ResolvedDate = DateTime.Now;
+            selectedTicket.ResolvedBy = "Current Agent"; // In real app, this would be the logged-in agent's name
             // TODO: Implement resolve ticket logic
             Console.WriteLine($"Resolve ticket {selectedTicket.Id}");
             
@@ -287,6 +313,8 @@
         public string PlayerId { get; set; } = "";
         public DateTime CreatedDate { get; set; }
         public string Status { get; set; } = "";
+        public DateTime? ResolvedDate { get; set; }
+        public string? ResolvedBy { get; set; }
         public List<MessageViewModel> Messages { get; set; } = new();
     }
 
