@@ -158,6 +158,31 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.17.0 - Enhanced Player UX & Role-Based UI Controls
+- **CustomerServiceApp.Web v1.17.0**: Improved player experience with proper role-based interface design
+
+#### 🚀 **NEW FEATURES**:
+- **Role-Based UI Controls**:
+  - Removed resolve ticket button from PlayerTickets.razor (only agents should resolve tickets)
+  - Eliminated ResolveTicket method from player interface for proper role separation
+  - Clean, focused player interface without administrative controls
+
+- **Enhanced Reply Functionality**:
+  - Advanced loading states with spinner and "Sending..." feedback during reply submission
+  - Smart form validation: disabled send button when text is empty or system is loading
+  - Disabled textarea during loading to prevent multiple submissions
+  - Seamless user experience with proper visual feedback
+
+#### 🛡️ **SECURITY & CONSISTENCY**:
+- **Player-Specific API Integration**: SendReply method now uses GetPlayerTicketsAsync consistently for all data operations
+- **Improved Data Consistency**: Enhanced reply refresh logic maintains both ticket list and detail view synchronization
+- **Fallback Error Handling**: Robust fallback to SelectTicket method when API responses are unexpected
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Optimized API Usage**: Consistent use of player-specific endpoints throughout the reply workflow
+- **Enhanced State Management**: Proper loading state coordination between UI controls and backend operations
+- **Error Recovery**: Comprehensive error handling with graceful degradation
+
 ### Version 1.16.0 - Player-Specific API Integration & Enhanced Security
 - **CustomerServiceApp.Web v1.16.0**: Enhanced player experience with optimized ticket loading
 
