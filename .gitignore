@@ -56,3 +56,6 @@ nunit-*.xml
 # Copilot
 .github/instructions/*.md
 .github/copilot-instructions.md
+
+# JetBrains Rider
+.idea/
