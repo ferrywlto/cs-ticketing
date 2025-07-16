@@ -2,6 +2,7 @@
 @layout TicketLayout
 @using CustomerServiceApp.Web.Services
 @using CustomerServiceApp.Web
+@using CustomerServiceApp.Web.Components
 @using CustomerServiceApp.Application.Tickets
 @using CustomerServiceApp.Application.Common.DTOs
 @using CustomerServiceApp.Domain.Tickets
@@ -147,42 +148,7 @@
                             @foreach (var message in selectedTicket.Messages)
                             {
                                 var isFromAgent = message.Author?.UserType == "Agent";
-                                <div class="message-item mb-3">
-                                    <div class="card @(isFromAgent ? "border-success" : "border-primary")">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start">
-                                                <div class="flex-grow-1">
-                                                    <p class="card-text">@message.Content</p>
-                                                    <div class="small text-muted">
-                                                        <div>@(isFromAgent ? "CS Agent" : message.Author?.Name ?? "Unknown")</div>
-                                                        <div>@message.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                                    </div>
-                                                </div>
-                                                <div class="avatar-placeholder ms-3">
-                                                    @if (isFromAgent)
-                                                    {
-                                                        @if (!string.IsNullOrEmpty(message.Author?.Avatar))
-                                                        {
-                                                            <img src="@message.Author.Avatar" alt="@(message.Author?.Name ?? "CS Agent")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                                        }
-                                                        else
-                                                        {
-                                                            <i class="bi bi-shield-fill fs-4 text-success"></i>
-                                                        }
-                                                    }
-                                                    else if (!string.IsNullOrEmpty(message.Author?.Avatar))
-                                                    {
-                                                        <img src="@message.Author.Avatar" alt="@(message.Author?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <MessageCard Message="message" IsFromAgent="isFromAgent" />
                             }
                         }
                         else

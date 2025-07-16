@@ -1,0 +1,47 @@
+<div class="message-item mb-3">
+    <div class="card @(IsFromAgent ? "border-success" : "border-primary")">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <p class="card-text">@Message.Content</p>
+                    <div class="small text-muted">
+                        <div>@(IsFromAgent ? "CS Agent" : Message.Author?.Name ?? "Unknown")</div>
+                        <div>@Message.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
+                    </div>
+                </div>
+                <div class="avatar-placeholder ms-3">
+                    @if (!string.IsNullOrEmpty(Message.Author?.Avatar))
+                    {
+                        <img src="@Message.Author.Avatar" alt="@(AlternateDescription)" class="rounded-circle avatar-placeholder" />
+                    }
+                    else
+                    {
+                        <i class="bi fs-4 @(IconClass)"></i>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+.avatar-placeholder {
+    width: 32px; 
+    height: 32px; 
+    object-fit: cover;
+}
+</style>
+@code {
+    /// <summary>
+    /// The message to display
+    /// </summary>
+    [Parameter] public required ReplyDto Message { get; set; }
+    
+    /// <summary>
+    /// Whether this message is from an agent (true) or player (false)
+    /// </summary>
+    [Parameter] public required bool IsFromAgent { get; set; }
+
+    private string DefaultAuthorName => IsFromAgent ? "CS Agent" : "User";
+    private string AlternateDescription => Message.Author?.Name ?? DefaultAuthorName;
+    private string IconClass => IsFromAgent ? "text-success bi-shield-fill" : "text-primary bi-person-circle";
+}

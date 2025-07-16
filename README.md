@@ -158,6 +158,25 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.31.0 - MessageCard Component Extraction
+- **CustomerServiceApp.Web v1.31.0**: Extracted reusable MessageCard component for message display
+
+#### 🚀 **NEW FEATURES**:
+- **MessageCard Component**:
+  - Clean, reusable component for displaying messages in ticket threads
+  - Accepts Message (ReplyDto) and IsFromAgent (bool) parameters
+  - Handles different styling for agent vs player messages
+  - Shows appropriate avatars with fallback icons
+  - Consistent message formatting with proper date display
+  - Eliminates code duplication across pages
+
+#### 🛠️ **CODE IMPROVEMENTS**:
+- **Component Extraction**: Moved message display logic from PlayerTickets.razor to reusable component
+- **Consistent UI**: Standardized message appearance across all pages
+- **Code Deduplication**: Removed duplicate HTML/CSS for message cards
+- **Future-Ready**: Component available for use in AgentTickets and other pages
+- **Clean Architecture**: Follows single responsibility principle
+
 ### Version 1.30.0 - Simplified MessageReplyInput Component
 - **CustomerServiceApp.Web v1.30.0**: Simplified MessageReplyInput component focusing on essential functionality
 
