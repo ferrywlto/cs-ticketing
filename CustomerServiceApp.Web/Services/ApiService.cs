@@ -44,6 +44,14 @@ public class ApiService
     }
 
     /// <summary>
+    /// Clears the authorization header
+    /// </summary>
+    public void ClearAuthorizationHeader()
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = null;
+    }
+
+    /// <summary>
     /// Authenticates a player
     /// </summary>
     /// <param name="loginRequest">Login credentials</param>
@@ -98,6 +106,31 @@ public class ApiService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to get tickets from API");
+            return new List<TicketDto>().AsReadOnly();
+        }
+    }
+
+    /// <summary>
+    /// Gets all unresolved tickets for agents (includes tickets from all players with status Open or InResolution)
+    /// </summary>
+    /// <returns>List of unresolved tickets</returns>
+    public async Task<IReadOnlyList<TicketDto>> GetUnresolvedTicketsAsync()
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync("/api/tickets/unresolved");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var tickets = await response.Content.ReadFromJsonAsync<List<TicketDto>>(_jsonOptions);
+                return tickets?.AsReadOnly() ?? new List<TicketDto>().AsReadOnly();
+            }
+
+            return [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to get unresolved tickets from API");
             return new List<TicketDto>().AsReadOnly();
         }
     }

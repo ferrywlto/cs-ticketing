@@ -162,8 +162,8 @@
     // Get current agent ID from app state
     private string CurrentAgentId => CurrentState?.CurrentUser?.Id.ToString() ?? "";
 
-    // Get tickets from app state (already sorted by app state) - for agents, show unresolved tickets from all players
-    private IReadOnlyList<TicketDto> TicketList => CurrentState?.Tickets?.Where(t => t.Status != "Resolved").ToList().AsReadOnly() ?? new List<TicketDto>().AsReadOnly();
+    // Get unresolved tickets from app state (API already filters to unresolved tickets for agents)
+    private IReadOnlyList<TicketDto> TicketList => CurrentState?.Tickets ?? new List<TicketDto>().AsReadOnly();
 
     // Get selected ticket from app state
     private TicketDto? selectedTicket => CurrentState?.SelectedTicket;
@@ -326,24 +326,24 @@
 
         try
         {
-            // For agents, fetch all tickets from the server (not player-specific)
-            var allTickets = await ApiService.GetTicketsAsync();
+            // For agents, fetch unresolved tickets from all players
+            var unresolvedTickets = await ApiService.GetUnresolvedTicketsAsync();
             
             // Store tickets in app state
-            await AppState.DispatchTicketsLoadedAsync(allTickets);
+            await AppState.DispatchTicketsLoadedAsync(unresolvedTickets);
             
             // Auto-select first unresolved ticket if requested and available
             if (autoSelectFirst)
             {
-                var firstUnresolvedTicket = allTickets.FirstOrDefault(t => t.Status != "Resolved");
+                var firstUnresolvedTicket = unresolvedTickets.FirstOrDefault();
                 if (firstUnresolvedTicket != null)
                 {
                     await SelectTicket(firstUnresolvedTicket.Id);
                 }
             }
             
-            Logger.LogDebug("Successfully loaded ticket list with {Count} tickets for agent", allTickets.Count);
-            return allTickets;
+            Logger.LogDebug("Successfully loaded {Count} unresolved tickets for agent", unresolvedTickets.Count);
+            return unresolvedTickets;
         }
         catch (Exception ex)
         {
@@ -377,7 +377,7 @@
                 await RefreshTicketList();
                 
                 // Auto-select next unresolved ticket after resolving current one
-                var unresolvedTickets = TicketList.Where(t => t.Status != "Resolved").ToList();
+                var unresolvedTickets = TicketList.ToList();
                 if (unresolvedTickets.Any())
                 {
                     await SelectTicket(unresolvedTickets.First().Id);
