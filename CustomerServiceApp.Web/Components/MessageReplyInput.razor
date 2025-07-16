@@ -1,0 +1,98 @@
+@inject AppStateStore AppState
+@inject ApiService ApiService
+@inject ILogger<MessageReplyInput> Logger
+
+<!-- Reply Section -->
+@if (selectedTicket?.Status != "Resolved")
+{
+    <div class="p-3 border-top">
+        <div class="d-flex align-items-start">
+            <div class="avatar-placeholder me-3">
+                @if (!string.IsNullOrEmpty(CurrentUser?.Avatar))
+                {
+                    <img src="@CurrentUser?.Avatar" alt="@(CurrentUser?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                }
+                else
+                {
+                    <i class="bi bi-person-circle fs-4 text-primary"></i>
+                }
+            </div>
+            <div class="flex-grow-1">
+                <textarea class="form-control mb-2" rows="3" placeholder="Type your message..." @bind="replyText" disabled="@(CurrentState?.IsLoading ?? false)"></textarea>
+                <button class="btn btn-primary" @onclick="HandleSendReply" disabled="@(string.IsNullOrWhiteSpace(replyText) || CurrentState?.IsLoading == true)">
+                    @if (CurrentState?.IsLoading == true)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Sending...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-send"></i>
+                        <span>Send</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="p-3 border-top bg-light text-center">
+        <small class="text-muted">This ticket has been resolved and cannot receive new replies.</small>
+    </div>
+}
+
+@code {
+    [Parameter] public EventCallback<ReplyDto?> OnReplyResult { get; set; }
+
+    private string replyText = "";
+    private AppState? CurrentState;
+    private UserDto? CurrentUser => CurrentState?.CurrentUser;
+    private TicketDto? selectedTicket => CurrentState?.SelectedTicket;
+
+    protected override void OnParametersSet()
+    {
+        CurrentState = AppState.GetState();
+    }
+
+    private async Task HandleSendReply()
+    {
+        if (!string.IsNullOrWhiteSpace(replyText) && selectedTicket != null && CurrentUser != null)
+        {
+            try
+            {
+                AppState.DispatchLoadingStateAsync(true);
+                
+                // Create reply DTO
+                var createReplyDto = new CreateReplyDto(
+                    replyText,
+                    CurrentUser.Id,
+                    selectedTicket.Id);
+                
+                // Call API to add reply
+                var newReply = await ApiService.AddReplyAsync(selectedTicket.Id, createReplyDto);
+                
+                // Clear reply text after successful creation
+                if (newReply != null)
+                {
+                    replyText = "";
+                    Logger.LogInformation("Reply added to ticket {TicketId}", selectedTicket.Id);
+                }
+                
+                // Notify parent with the result
+                await OnReplyResult.InvokeAsync(newReply);
+                
+                AppState.DispatchLoadingStateAsync(false);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to send reply for ticket {TicketId}", selectedTicket?.Id);
+                await AppState.DispatchErrorAsync("Failed to send reply. Please try again.");
+                AppState.DispatchLoadingStateAsync(false);
+                
+                // Notify parent with null result indicating failure
+                await OnReplyResult.InvokeAsync(null);
+            }
+        }
+    }
+}

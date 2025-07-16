@@ -158,6 +158,41 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.30.0 - Simplified MessageReplyInput Component
+- **CustomerServiceApp.Web v1.30.0**: Simplified MessageReplyInput component focusing on essential functionality
+
+#### 🚀 **NEW FEATURES**:
+- **MessageReplyInput Component**:
+  - Clean, focused component for message reply input functionality
+  - Leverages AppStateStore for user information and loading states automatically
+  - Simple parameter set: Ticket, ReplyText, ReplyTextChanged, OnSendReply
+  - Automatic avatar display based on AppStateStore.CurrentUser data
+  - Built-in loading state management from AppStateStore.IsLoading
+
+#### 🛠️ **CODE IMPROVEMENTS**:
+- **Simplified Architecture**: Removed overfitted parameters designed for incompatible page structures
+- **AppStateStore Integration**: Component properly leverages centralized state management
+- **Single Responsibility**: Component focuses solely on reply input functionality
+- **Future-Ready**: Prepared for AgentTickets page revamp with consistent component structure
+- **Clean Parameters**: Eliminated redundant parameters (ShowUserAvatar, AvatarIconClass, PlaceholderText, etc.)
+
+### Version 1.29.0 - MessageReplyInput Component Extraction
+- **CustomerServiceApp.Web v1.29.0**: Extracted reusable MessageReplyInput component for code deduplication
+
+#### 🚀 **NEW FEATURES**:
+- **MessageReplyInput Component**:
+  - Created flexible MessageReplyInput.razor component supporting both player and agent ticket pages
+  - Dynamic ticket type support: handles TicketDto (PlayerTickets) and TicketViewModel (AgentTickets) via reflection
+  - Dual callback architecture: OnSendReply (async) for PlayerTickets, OnSendReplyAction (sync) for AgentTickets
+  - Configurable avatar display: ShowUserAvatar parameter switches between user avatar and custom icons
+  - Parameterized styling: AvatarIconClass, AvatarIconColor, and PlaceholderText for page-specific customization
+
+#### 🛠️ **CODE IMPROVEMENTS**:
+- **Code Deduplication**: Eliminated duplicate HTML structure between PlayerTickets and AgentTickets reply sections
+- **Enhanced Reusability**: Single component handles both ticket page contexts with appropriate parameterization
+- **Maintained Functionality**: Preserved all existing features including loading states, form validation, and disabled states
+- **Flexible Integration**: Component adapts to different page architectures without breaking existing functionality
+
 ### Version 1.17.0 - Enhanced Player UX & Role-Based UI Controls
 - **CustomerServiceApp.Web v1.17.0**: Improved player experience with proper role-based interface design
 
