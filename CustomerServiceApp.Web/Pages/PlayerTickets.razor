@@ -1,5 +1,7 @@
 @page "/player/tickets"
 @layout TicketLayout
+@inject NavigationManager Navigation
+@inject AppStateStore AppState
 
 <PageTitle>My Support Tickets</PageTitle>
 
@@ -8,11 +10,16 @@
         <!-- Left Panel: New Ticket Button + Ticket List -->
         <div class="col-md-4 border-end">
             <div class="d-flex flex-column h-100">
-                <!-- New Ticket Button -->
+                <!-- Logout Button and New Ticket Button -->
                 <div class="p-3 border-bottom">
-                    <button class="btn btn-primary w-100" @onclick="CreateNewTicket">
-                        <i class="bi bi-plus-circle"></i> New ticket
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary" @onclick="LogoutPlayer">
+                            <i class="bi bi-box-arrow-left"></i> Logout
+                        </button>
+                        <button class="btn btn-primary flex-grow-1" @onclick="CreateNewTicket">
+                            <i class="bi bi-plus-circle"></i> New ticket
+                        </button>
+                    </div>
                 </div>
                 
                 <!-- Ticket List -->
@@ -235,6 +242,12 @@
     {
         // TODO: Implement new ticket creation
         Console.WriteLine("Create new ticket clicked");
+    }
+
+    private async Task LogoutPlayer()
+    {
+        await AppState.DispatchLogoutAsync();
+        Navigation.NavigateTo("/player/login", replace: true);
     }
 
     private void ResolveTicket()

@@ -102,6 +102,14 @@ TBD
 - We will use JWT with short exp for session management. 
 - We will use Redux style dispatch and mutate pattern for frontend state management.
 - We will use CDN Bootstrap styles for frontend UI styles for simplicity.
+- For front-end state management, create classes:
+  - AppState - An object to hold the application state, ideally in record type.
+  - AppStateStore - A centralized state management store in Redux approach.
+    - It holds an instance of AppState which is immutable from outside. 
+    - The app state can only be modified from the private mutation methods. 
+    - The store will expose public dispatch and query methods that will call the mutation methods.
+    - It always return a immutable copy of the app state when query.
+  - The AppStateStore is registered as a singleton in DI container, injected into pages. 
 
 ## Security Configuration
 
@@ -146,10 +154,114 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 - Caching mechanism to improve frequent reading tickets loading time.  
 - Using Signalr for ticket update notifications.
 - Paging mechanism for loading tickets and messages in a ticket thread.
+- Apply rate limit to APIs 
 
 ## Change Log
 
-### Version 1.9.0 (Current) - EF Core Infrastructure & Repository Pattern Completion
+### Version 1.15.0 - Enhanced Player Experience & Direct DTO Usage
+- **CustomerServiceApp.Web v1.10.0**: Added logout functionality and simplified authentication models
+- **CustomerServiceApp.IntegrationTests v1.1.0**: Enhanced test coverage for UI interactions
+- **CustomerServiceApp.Application v1.11.0**: Enhanced AppStateStore with comprehensive exception logging
+- **CustomerServiceApp.UnitTests v1.4.0**: Comprehensive testing for local storage functionality and logging
+
+#### 🚀 **NEW FEATURES**:
+- **Enhanced Player Interface**:
+  - Added logout button to player tickets page for easy session termination
+  - Logout button positioned left of "New ticket" button with clean responsive design
+  - One-click logout with automatic navigation back to player login page
+  - Proper state cleanup using `DispatchLogoutAsync()` for session management
+
+- **Simplified Authentication Architecture**:
+  - Eliminated unnecessary `LoginModel` wrapper class for cleaner code structure
+  - Direct `LoginRequestDto` usage in login forms with proper validation
+  - Removed redundant Models namespace and folder structure
+  - Maintained all validation attributes (`[Required]`, `[EmailAddress]`, `[MinLength]`) with Blazor forms
+
+- **Complete Async State Management**: 
+  - ALL dispatch methods now async: `DispatchLoginAsync()`, `DispatchLogoutAsync()`, `DispatchLoadingStateAsync()`, `DispatchErrorAsync()`, `DispatchSuccessMessageAsync()`, `DispatchTicketsLoadedAsync()`, `DispatchSelectTicketAsync()`, `DispatchTicketCreatedAsync()`, `DispatchTicketUpdatedAsync()`, `DispatchClearMessagesAsync()`
+  - Proper async/await patterns for all state persistence operations across all features
+  - UI components updated to use async dispatch methods for enhanced error handling and reliability
+  - Backward compatibility maintained with synchronous methods marked as obsolete for gradual migration
+  - Improved persistence reliability by awaiting storage operations instead of fire-and-forget for all state changes
+
+- **Local Storage Persistence**: 
+  - Automatic persistence of authentication state (user, token, expiration) to browser local storage
+  - State restoration on application startup with automatic token expiration handling
+  - Graceful error handling for storage failures and invalid data
+  - Authorization header restoration for seamless API integration
+
+#### 🛡️ **OBSERVABILITY & LOGGING**:
+- **Comprehensive Exception Logging**: 
+  - Structured logging using `ILogger<AppStateStore>` for all storage operations
+  - Warning-level logs for JSON deserialization errors with detailed context
+  - Exception logging for storage access failures with descriptive messages
+  - Production-ready error handling with proper logging for debugging
+
+#### 🏗️ **INFRASTRUCTURE**:
+- **LocalStorageService**: JavaScript interop service for browser local storage access with error handling
+- **AppStateStore Enhancement**: Integrated local storage persistence with existing Redux pattern and logger dependency injection
+- **App Component Initialization**: State loading on application startup with API authorization setup
+- **Async Method Pattern**: Consistent async/await patterns across all state management operations
+
+#### 🧪 **TESTING**:
+- **Comprehensive Unit Tests**: 9 total test cases covering all local storage scenarios including logging verification
+- **Mock-based Testing**: Proper mocking of IJSRuntime, ILocalStorageService, and ILogger for isolated testing
+- **Edge Case Coverage**: Token expiration, invalid data, null data handling, and exception logging validation
+
+### Version 1.10.1 - Blazor Component Lifecycle Fixes
+- **CustomerServiceApp.Web v1.4.1**: Fixed production runtime errors with proper lifecycle management
+
+#### 🐛 **BUG FIXES**:
+- **Blazor Component Lifecycle Management**: 
+  - Fixed "duplicate subscription" error in Home component using proper `OnAfterRender(firstRender)` pattern
+  - Replaced `OnInitialized` with `OnAfterRender` to ensure single event subscription per component instance
+  - Eliminated async warnings by removing unnecessary async/await in authentication check methods
+  - Proper disposal pattern with `IDisposable` implementation for event unsubscription
+
+#### 🏗️ **STABILITY IMPROVEMENTS**:
+- **Component Event Management**: Thread-safe event subscription with `_isSubscribed` flag tracking
+- **Lifecycle Optimization**: First-render-only initialization prevents duplicate operations
+- **Memory Management**: Proper event cleanup in Dispose method to prevent memory leaks
+- **Authentication Flow**: Seamless user redirection after component initialization without runtime errors
+
+### Version 1.10.0 - App State Management & Functional Authentication
+- **CustomerServiceApp.Web v1.4.0**: Complete Redux-pattern state management and functional sign-in implementation
+
+#### 🚀 **NEW FEATURES**:
+- **Redux-Pattern App State Management**:
+  - `AppState` record with immutable application state (user, tickets, loading states, messages)
+  - `AppStateStore` singleton with centralized state management and event-driven updates
+  - Complete dispatch/mutation pattern for state changes (login, logout, ticket operations)
+  - Type-safe state queries with computed properties (IsAuthenticated, IsPlayer, IsAgent)
+
+- **Functional Authentication Pages**:
+  - `PlayerLogin.razor` with form validation, error handling, and JWT authentication
+  - `AgentLogin.razor` with role-specific styling and agent authentication
+  - `LoginModel` for mutable form binding with DTO conversion
+  - Real-time form validation using DataAnnotations and EditForm components
+  - Loading states with spinner indicators and disabled controls during authentication
+
+- **HTTP Client Integration**:
+  - `ApiService` for structured API communication with JSON serialization
+  - JWT token management with authorization header configuration
+  - Error handling and null-safe API responses
+  - Support for all authentication and ticket operations
+
+#### 🏗️ **ARCHITECTURE IMPROVEMENTS**:
+- **Clean Architecture Compliance**: Services registered in DI container following SOLID principles
+- **State Management**: Immutable state with event-driven updates and proper component lifecycle management
+- **Form Handling**: Blazor EditForm with validation, error display, and user feedback
+- **Navigation**: Role-based redirection after successful authentication
+- **Error Handling**: Comprehensive try-catch with user-friendly error messages
+
+#### 🎨 **UI/UX ENHANCEMENTS**:
+- Modern form styling with Bootstrap cards and validation feedback
+- Loading indicators with disabled states during operations
+- Demo user credentials displayed for easy testing
+- Responsive design with proper mobile support
+- Role-specific color schemes (primary for players, success for agents)
+
+### Version 1.9.0 - EF Core Infrastructure & Repository Pattern Completion
 - **CustomerServiceApp.API v1.7.0**: Enhanced ticket reply functionality with proper EF Core integration
 - **CustomerServiceApp.Application v1.9.0**: Comprehensive reply handling with balanced domain/repository approach
 - **CustomerServiceApp.Infrastructure v1.5.0**: Complete repository pattern implementation with Reply repository

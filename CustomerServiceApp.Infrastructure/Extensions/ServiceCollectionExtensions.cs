@@ -146,7 +146,7 @@ public static class ServiceCollectionExtensions
         {
             Email = "player2@example.com",
             Name = "Jane Smith",
-            PasswordHash = passwordHasher.HashPassword("password456"), // Development password
+            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
             PlayerNumber = "P002"
         };
 
@@ -154,16 +154,16 @@ public static class ServiceCollectionExtensions
         {
             Email = "player3@example.com",
             Name = "Bob Johnson",
-            PasswordHash = passwordHasher.HashPassword("password789"), // Development password
+            PasswordHash = passwordHasher.HashPassword("password123"), // Development password
             PlayerNumber = "P003"
         };
 
         // Create sample agent
         var agent1 = new CustomerServiceApp.Domain.Users.Agent
         {
-            Email = "agent1@example.com",
-            Name = "Agent Anderson",
-            PasswordHash = passwordHasher.HashPassword("agentpass123") // Development password
+            Email = "agent@customerservice.com",
+            Name = "CS Agent",
+            PasswordHash = passwordHasher.HashPassword("password123") // Development password
         };
 
         context.Users.AddRange(player1, player2, player3, agent1);
@@ -195,15 +195,15 @@ public static class ServiceCollectionExtensions
             TicketId = ticket1.Id
         };
 
-        ticket1.AddReply(reply1);
-
         var reply2 = new CustomerServiceApp.Domain.Tickets.Reply
         {
             Content = "I tried resetting my password but it still doesn't work.",
             Author = player1,
             TicketId = ticket1.Id
         };
+        context.Replies.AddRange(reply1, reply2);
 
+        ticket1.AddReply(reply1);
         ticket1.AddReply(reply2);
 
         context.Tickets.UpdateRange(ticket1);
