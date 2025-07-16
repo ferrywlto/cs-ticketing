@@ -202,7 +202,23 @@ public static class ServiceCollectionExtensions
             Creator = player2
         };
 
-        context.Tickets.AddRange(ticket1, ticket2);
+        // Create resolved ticket 1: Player1 ticket resolved by Agent2
+        var resolvedTicket1 = new Domain.Tickets.Ticket
+        {
+            Title = "Account Verification",
+            Description = "Need help verifying my account details",
+            Creator = player1
+        };
+
+        // Create resolved ticket 2: Player2 ticket with Agent1 reply, then resolved by Agent3
+        var resolvedTicket2 = new Domain.Tickets.Ticket
+        {
+            Title = "Game Balance Issue",
+            Description = "My game balance is showing incorrect amount",
+            Creator = player2
+        };
+
+        context.Tickets.AddRange(ticket1, ticket2, resolvedTicket1, resolvedTicket2);
         await context.SaveChangesAsync();
 
         // Add sample replies
@@ -219,12 +235,71 @@ public static class ServiceCollectionExtensions
             Author = player1,
             TicketId = ticket1.Id
         };
-        context.Replies.AddRange(reply1, reply2);
 
+        // Replies for resolved ticket 1 (Player1 ticket resolved by Agent2)
+        var resolvedReply1 = new Domain.Tickets.Reply
+        {
+            Content = "I can help you with account verification. Please provide your email and player number.",
+            Author = agent2,
+            TicketId = resolvedTicket1.Id
+        };
+
+        var resolvedReply2 = new Domain.Tickets.Reply
+        {
+            Content = "My email is player1@example.com and player number is P001.",
+            Author = player1,
+            TicketId = resolvedTicket1.Id
+        };
+
+        var resolvedReply3 = new Domain.Tickets.Reply
+        {
+            Content = "Thank you. I've verified your account successfully. Everything looks good now.",
+            Author = agent2,
+            TicketId = resolvedTicket1.Id
+        };
+
+        // Replies for resolved ticket 2 (Player2 ticket with Agent1 reply, then resolved by Agent3)
+        var resolvedReply4 = new Domain.Tickets.Reply
+        {
+            Content = "I can see the balance discrepancy. Let me investigate this for you.",
+            Author = agent1,
+            TicketId = resolvedTicket2.Id
+        };
+
+        var resolvedReply5 = new Domain.Tickets.Reply
+        {
+            Content = "Thank you! When can I expect this to be fixed?",
+            Author = player2,
+            TicketId = resolvedTicket2.Id
+        };
+
+        var resolvedReply6 = new Domain.Tickets.Reply
+        {
+            Content = "I've reviewed the case and corrected your balance. The issue has been resolved.",
+            Author = agent3,
+            TicketId = resolvedTicket2.Id
+        };
+
+        context.Replies.AddRange(reply1, reply2, resolvedReply1, resolvedReply2, resolvedReply3, 
+                                 resolvedReply4, resolvedReply5, resolvedReply6);
+
+        // Add replies to ticket1 (existing open ticket)
         ticket1.AddReply(reply1);
         ticket1.AddReply(reply2);
 
-        context.Tickets.UpdateRange(ticket1);
+        // Add replies and resolve ticket1 (Player1 ticket resolved by Agent2)
+        resolvedTicket1.AddReply(resolvedReply1);
+        resolvedTicket1.AddReply(resolvedReply2);
+        resolvedTicket1.AddReply(resolvedReply3);
+        resolvedTicket1.Resolve(agent2);
+
+        // Add replies and resolve ticket2 (Player2 ticket with Agent1 reply, then resolved by Agent3)
+        resolvedTicket2.AddReply(resolvedReply4);
+        resolvedTicket2.AddReply(resolvedReply5);
+        resolvedTicket2.AddReply(resolvedReply6);
+        resolvedTicket2.Resolve(agent3);
+
+        context.Tickets.UpdateRange(ticket1, resolvedTicket1, resolvedTicket2);
         await context.SaveChangesAsync();
     }
 }
