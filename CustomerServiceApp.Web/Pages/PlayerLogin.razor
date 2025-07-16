@@ -1,133 +1,20 @@
 @page "/player/login"
 @layout TicketLayout
-@inject AppStateStore AppState
 @inject ApiService ApiService
-@inject NavigationManager Navigation
-@implements IDisposable
 @using CustomerServiceApp.Application.Authentication
 @using CustomerServiceApp.Application.Common.DTOs
 @using CustomerServiceApp.Web.ViewModels
 
 <PageTitle>Player Login</PageTitle>
 
-<div class="d-flex align-items-center justify-content-center h-100">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4">
-                <div class="card shadow">
-                    <div class="card-header">
-                        <h3 class="text-center mb-0">Player Login</h3>
-                    </div>
-                    <div class="card-body">
-                        @if (!string.IsNullOrEmpty(viewModel.ErrorMessage))
-                        {
-                            <div class="alert alert-danger">
-                                @viewModel.ErrorMessage
-                            </div>
-                        }
-                        
-                        <EditForm Model="@viewModel" OnValidSubmit="@HandleLogin">
-                            <DataAnnotationsValidator />
-                            <ValidationSummary class="text-danger" />
-                            
-                            <div class="mb-3">
-                                <label for="player-email" class="form-label">Email</label>
-                                <InputText @bind-Value="viewModel.Email" class="form-control" id="player-email" placeholder="Enter your email" disabled="@viewModel.IsLoading" />
-                                <ValidationMessage For="@(() => viewModel.Email)" class="text-danger" />
-                            </div>
-                            <div class="mb-3">
-                                <label for="player-password" class="form-label">Password</label>
-                                <InputText type="password" @bind-Value="viewModel.Password" class="form-control" id="player-password" placeholder="Enter your password" disabled="@viewModel.IsLoading" />
-                                <ValidationMessage For="@(() => viewModel.Password)" class="text-danger" />
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100" disabled="@viewModel.IsLoading">
-                                @if (viewModel.IsLoading)
-                                {
-                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                    <span>Signing In...</span>
-                                }
-                                else
-                                {
-                                    <span>Sign In</span>
-                                }
-                            </button>
-                        </EditForm>
-                        
-                        <div class="text-center mt-3">
-                            <small class="text-muted">
-                                Demo users: player1@example.com, player2@example.com, player3@example.com (password: password123)
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+<LoginForm Title="Player Login"
+           HeaderClass=""
+           ButtonClass="btn-primary"
+           DemoCredentials="@(DemoCredentials)"
+           RedirectUrl="/player/tickets"
+           IsUserAuthenticated="@(state => state.IsAuthenticated && state.IsPlayer)"
+           LoginApiCall="@ApiService.PlayerLoginAsync"
+           ValidateUserType="@(result => result.User is PlayerDto)" />
 @code {
-    private PlayerLoginViewModel viewModel = new();
-
-    protected override void OnInitialized()
-    {
-        AppState.StateChanged += StateHasChanged;
-        
-        // Check if already authenticated and redirect
-        var state = AppState.GetState();
-        if (state.IsAuthenticated && state.IsPlayer)
-        {
-            Navigation.NavigateTo("/player/tickets", replace: true);
-        }
-    }
-
-    private async Task HandleLogin()
-    {
-        viewModel.SetLoading(true);
-        StateHasChanged();
-
-        try
-        {
-            AppState.DispatchLoadingStateAsync(true);
-            
-            var result = await ApiService.PlayerLoginAsync(viewModel.ToLoginRequest());
-            
-            if (result != null)
-            {
-                // Verify the user is actually a player
-                if (result.User is not PlayerDto)
-                {
-                    viewModel.SetError("Invalid credentials or account type. Please use the correct login page.");
-                    await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
-                    return;
-                }
-
-                await AppState.DispatchLoginAsync(result);
-                ApiService.SetAuthorizationHeader(result.Token);
-                
-                // Navigate to player tickets
-                Navigation.NavigateTo("/player/tickets", replace: true);
-            }
-            else
-            {
-                viewModel.SetError("Invalid email or password. Please try again.");
-                await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
-            }
-        }
-        catch (Exception)
-        {
-            viewModel.SetError("An error occurred during login. Please try again.");
-            await AppState.DispatchErrorAsync(viewModel.ErrorMessage!);
-        }
-        finally
-        {
-            viewModel.SetLoading(false);
-            AppState.DispatchLoadingStateAsync(false);
-            StateHasChanged();
-        }
-    }
-
-    public void Dispose()
-    {
-        AppState.StateChanged -= StateHasChanged;
-    }
+    private string DemoCredentials = "Demo users: player1@example.com, player2@example.com, player3@example.com (password: password123)";
 }

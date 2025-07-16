@@ -1,0 +1,158 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using System.ComponentModel.DataAnnotations
+@using CustomerServiceApp.Application.Authentication
+@using CustomerServiceApp.Application.Common.DTOs
+@using CustomerServiceApp.Web.State
+@inject AppStateStore AppState
+@inject ApiService ApiService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<div class="d-flex align-items-center justify-content-center h-100">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow">
+                    <div class="card-header @HeaderClass">
+                        <h3 class="text-center mb-0">@Title</h3>
+                    </div>
+                    <div class="card-body">
+                        @if (!string.IsNullOrEmpty(ErrorMessage))
+                        {
+                            <div class="alert alert-danger">
+                                @ErrorMessage
+                            </div>
+                        }
+                        
+                        <EditForm Model="@formModel" OnValidSubmit="@HandleSubmit">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+                            
+                            <div class="mb-3">
+                                <label for="login-email" class="form-label">Email</label>
+                                <InputText @bind-Value="formModel.Email" class="form-control" id="login-email" placeholder="Enter your email" disabled="@IsLoading" />
+                                <ValidationMessage For="@(() => formModel.Email)" class="text-danger" />
+                            </div>
+                            <div class="mb-3">
+                                <label for="login-password" class="form-label">Password</label>
+                                <InputText type="password" @bind-Value="formModel.Password" class="form-control" id="login-password" placeholder="Enter your password" disabled="@IsLoading" />
+                                <ValidationMessage For="@(() => formModel.Password)" class="text-danger" />
+                            </div>
+                            <button type="submit" class="btn @ButtonClass w-100" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                    <span>Signing In...</span>
+                                }
+                                else
+                                {
+                                    <span>Sign In</span>
+                                }
+                            </button>
+                        </EditForm>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted">
+                                @DemoCredentials
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Login";
+    [Parameter] public string HeaderClass { get; set; } = "";
+    [Parameter] public string ButtonClass { get; set; } = "btn-primary";
+    [Parameter] public string DemoCredentials { get; set; } = "";
+    [Parameter] public string RedirectUrl { get; set; } = "/";
+    [Parameter] public Func<AppState, bool> IsUserAuthenticated { get; set; } = _ => false;
+    [Parameter] public Func<LoginRequestDto, Task<AuthenticationResultDto?>> LoginApiCall { get; set; } = null!;
+    [Parameter] public Func<AuthenticationResultDto, bool> ValidateUserType { get; set; } = _ => true;
+
+    private class LoginFormModel
+    {
+        [Required(ErrorMessage = "Email is required.")]
+        [EmailAddress(ErrorMessage = "Invalid email format.")]
+        public string Email { get; set; } = string.Empty;
+        
+        [Required(ErrorMessage = "Password is required.")]
+        [MinLength(8, ErrorMessage = "Password must be at least 8 characters long.")]
+        public string Password { get; set; } = string.Empty;
+    }
+
+    private LoginFormModel formModel = new();
+    private string? errorMessage;
+    private bool isLoading;
+
+    private string? ErrorMessage => errorMessage;
+    private bool IsLoading => isLoading;
+
+    protected override void OnInitialized()
+    {
+        AppState.StateChanged += StateHasChanged;
+        
+        // Check if already authenticated and redirect
+        var state = AppState.GetState();
+        if (IsUserAuthenticated(state))
+        {
+            Navigation.NavigateTo(RedirectUrl, replace: true);
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            AppState.DispatchLoadingStateAsync(true);
+            
+            var result = await LoginApiCall(new LoginRequestDto(formModel.Email, formModel.Password));
+            
+            if (result != null)
+            {
+                // Verify the user type
+                if (!ValidateUserType(result))
+                {
+                    errorMessage = "Invalid credentials or account type. Please use the correct login page.";
+                    await AppState.DispatchErrorAsync(errorMessage);
+                    return;
+                }
+
+                await AppState.DispatchLoginAsync(result);
+                ApiService.SetAuthorizationHeader(result.Token);
+                
+                // Navigate to appropriate page
+                Navigation.NavigateTo(RedirectUrl, replace: true);
+            }
+            else
+            {
+                errorMessage = "Invalid email or password. Please try again.";
+                await AppState.DispatchErrorAsync(errorMessage);
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred during login. Please try again.";
+            await AppState.DispatchErrorAsync(errorMessage);
+        }
+        finally
+        {
+            isLoading = false;
+            AppState.DispatchLoadingStateAsync(false);
+            StateHasChanged();
+        }
+    }
+
+    public void Dispose()
+    {
+        AppState.StateChanged -= StateHasChanged;
+    }
+}

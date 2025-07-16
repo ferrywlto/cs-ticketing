@@ -24,14 +24,14 @@
         <div class="row justify-content-center g-4">
             <PortalCard IconClass="bi-person-circle"
                        TextColorClass="text-primary"
-                       Description="Create support tickets, track your requests, and get help with your account. View your ticket history and communicate with our support team."
+                       Description="@(PlayerDescription)"
                        LoginUrl="/player/login"
                        ButtonClass="btn-primary"
                        Role="Player" />
             
             <PortalCard IconClass="bi-shield-check"
                        TextColorClass="text-success"
-                       Description="Manage customer tickets, provide support responses, and resolve customer issues. Access the complete ticketing system dashboard."
+                       Description="@(AgentDescription)"
                        LoginUrl="/agent/login"
                        ButtonClass="btn-success"
                        Role="Agent" />
@@ -50,6 +50,11 @@
 </div>
 
 @code {
+    private string PlayerDescription =>
+        "Create support tickets, track your requests, and get help with your account. View your ticket history and communicate with our support team.";
+    private string AgentDescription =>
+        "Manage customer tickets, provide support responses, and resolve customer issues. Access the complete ticketing system dashboard.";
+
     protected override void OnInitialized()
     {
         AppState.StateChanged += StateHasChanged;
