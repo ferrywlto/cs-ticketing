@@ -41,6 +41,7 @@ dotnet run --project CustomerServiceApp.API -lp https
 // and
 dotnet run --project CustomerServiceApp.Web -lp https
 ```
+Note that the launch profile `-lp` switch for https is required to pass CORS check.
 
 To run the all tests, execute at project root directory:
 ```
@@ -57,7 +58,6 @@ To run the integration tests only:
 dotnet test --project CustomerService.IntegrationsTests
 ```
 
-Note that the `-lp` switch for https is required to pass CORS check.
 
 ## Requirement Analysis
 - There are the entities in the system:
@@ -107,6 +107,7 @@ Note that the `-lp` switch for https is required to pass CORS check.
 - Agent can reply to any ticket.  
 - Only Player can create new ticket.
 - Player can see resolved tickets on the list.
+- Assume ticket can only be resolved when it is in-resolution state.
 
 ## Technical Decisions
 - Using In-memory database due to keeping the project as simple as possible without external dependencies, this make sure user can run on their machine regardless of platform. As data persistency is not a mandatory in requirements.
