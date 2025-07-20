@@ -1,3 +1,4 @@
+using CustomerServiceApp.API.Configuration;
 using CustomerServiceApp.Application.Extensions;
 using CustomerServiceApp.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -75,13 +76,22 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
-builder.Services.AddCors(options =>
+// Configure CORS from appsettings
+var corsOptions = new CorsOptions();
+builder.Configuration.GetSection(CorsOptions.SectionName).Bind(corsOptions);
+
+if (corsOptions.AllowedOrigins?.Length > 0)
 {
-    options.AddPolicy("development",
-        builder => builder.WithOrigins("https://localhost:7131")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
-});
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("ConfiguredOrigins", policy =>
+        {
+            policy.WithOrigins(corsOptions.AllowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+}
 
 // Add application services
 builder.Services.AddApplication();
@@ -99,7 +109,14 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-    app.UseCors("development");
+}
+
+// Apply CORS policy if configured
+var corsConfig = new CorsOptions();
+app.Configuration.GetSection(CorsOptions.SectionName).Bind(corsConfig);
+if (corsConfig.AllowedOrigins?.Length > 0)
+{
+    app.UseCors("ConfiguredOrigins");
 }
 
 app.UseHttpsRedirection();
