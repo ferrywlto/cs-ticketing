@@ -80,18 +80,18 @@ builder.Services.AddAuthorization();
 var corsOptions = new CorsOptions();
 builder.Configuration.GetSection(CorsOptions.SectionName).Bind(corsOptions);
 
-if (corsOptions.AllowedOrigins?.Length > 0)
+builder.Services.AddCors(options =>
 {
-    builder.Services.AddCors(options =>
+    options.AddPolicy("development", policy =>
     {
-        options.AddPolicy("ConfiguredOrigins", policy =>
+        if (corsOptions.AllowedOrigins?.Length > 0)
         {
             policy.WithOrigins(corsOptions.AllowedOrigins)
                 .AllowAnyHeader()
                 .AllowAnyMethod();
-        });
+        }
     });
-}
+});
 
 // Add application services
 builder.Services.AddApplication();
@@ -109,14 +109,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-// Apply CORS policy if configured
-var corsConfig = new CorsOptions();
-app.Configuration.GetSection(CorsOptions.SectionName).Bind(corsConfig);
-if (corsConfig.AllowedOrigins?.Length > 0)
-{
-    app.UseCors("ConfiguredOrigins");
+    app.UseCors("development");
 }
 
 app.UseHttpsRedirection();
