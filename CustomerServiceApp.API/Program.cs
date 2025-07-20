@@ -1,3 +1,4 @@
+using CustomerServiceApp.API.Configuration;
 using CustomerServiceApp.Application.Extensions;
 using CustomerServiceApp.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -75,12 +76,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+// Configure CORS from appsettings
+var corsOptions = new CorsOptions();
+builder.Configuration.GetSection(CorsOptions.SectionName).Bind(corsOptions);
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("development",
-        builder => builder.WithOrigins("https://localhost:7131")
-                          .AllowAnyMethod()
-                          .AllowAnyHeader());
+    options.AddPolicy("development", policy =>
+    {
+        if (corsOptions.AllowedOrigins?.Length > 0)
+        {
+            policy.WithOrigins(corsOptions.AllowedOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        }
+    });
 });
 
 // Add application services
