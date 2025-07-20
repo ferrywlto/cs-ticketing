@@ -42,6 +42,21 @@ dotnet run --project CustomerServiceApp.API -lp https
 dotnet run --project CustomerServiceApp.Web -lp https
 ```
 
+To run the all tests, execute at project root directory:
+```
+dotnet test
+```
+
+To run the unit tests only:
+```
+dotnet test --project CustomerService.UnitTests
+```
+
+To run the integration tests only:
+```
+dotnet test --project CustomerService.IntegrationsTests
+```
+
 Note that the `-lp` switch for https is required to pass CORS check.
 
 ## Requirement Analysis
