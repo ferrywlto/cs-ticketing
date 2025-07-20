@@ -16,128 +16,125 @@
 
 <PageTitle>Agent Dashboard</PageTitle>
 
-<div class="container-fluid h-100">
-    <div class="row h-100">
+<div class="ticket-page-container">
+    <div class="row g-0 h-100">
         <!-- Left Panel: Logout Button + Ticket List -->
-        <div class="col-md-4 border-end">
-            <div class="d-flex flex-column h-100">
-                <!-- Logout Button -->
-                <div class="p-3 border-bottom">
-                    <button class="btn btn-outline-secondary w-100" @onclick="LogoutAgent">
-                        <i class="bi bi-box-arrow-left"></i> Logout
-                    </button>
-                </div>
-                
-                <!-- Ticket List -->
-                <div class="flex-grow-1 overflow-auto">
-                    @if (isLoading)
-                    {
-                        <div class="p-3 text-center">
-                            <div class="spinner-border text-success" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <div class="mt-2">Loading tickets...</div>
+        <div class="col-md-4 ticket-left-panel border-end">
+            <!-- Logout Button -->
+            <div class="ticket-panel-header">
+                <button class="btn btn-outline-secondary w-100" @onclick="LogoutAgent">
+                    <i class="bi bi-box-arrow-left"></i> Logout
+                </button>
+            </div>
+            
+            <!-- Ticket List -->
+            <div class="ticket-list-container">
+                @if (isLoading)
+                {
+                    <div class="p-3 text-center">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                    }
-                    else if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="p-3">
-                            <div class="alert alert-danger">
-                                @errorMessage
-                            </div>
+                        <div class="mt-2">Loading tickets...</div>
+                    </div>
+                }
+                else if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="p-3">
+                        <div class="alert alert-danger">
+                            @errorMessage
                         </div>
-                    }
-                    else if (!TicketList.Any())
+                    </div>
+                }
+                else if (!TicketList.Any())
+                {
+                    <div class="p-3 text-center text-muted">
+                        <i class="bi bi-inbox fs-1"></i>
+                        <div class="mt-2">No tickets assigned</div>
+                        <div class="small">All tickets are resolved or assigned to other agents</div>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var ticket in TicketList)
                     {
-                        <div class="p-3 text-center text-muted">
-                            <i class="bi bi-inbox fs-1"></i>
-                            <div class="mt-2">No tickets assigned</div>
-                            <div class="small">All tickets are resolved or assigned to other agents</div>
-                        </div>
+                        <TicketListItem Ticket="ticket" 
+                                      IsSelected="ticket.Id == selectedTicket?.Id" 
+                                      OnTicketSelected="() => SelectTicket(ticket.Id)" />
                     }
-                    else
-                    {
-                        @foreach (var ticket in TicketList)
-                        {
-                            <TicketListItem Ticket="ticket" 
-                                          IsSelected="ticket.Id == selectedTicket?.Id" 
-                                          OnTicketSelected="() => SelectTicket(ticket.Id)" />
-                        }
-                    }
-                </div>
+                }
             </div>
         </div>
         
         <!-- Right Panel: Ticket Details -->
-        <div class="col-md-8">
+        <div class="col-md-8 ticket-right-panel">
             @if (selectedTicket != null)
             {
-                <div class="d-flex flex-column h-100">
-                    <!-- Ticket Header -->
-                    <div class="p-3 border-bottom">
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <h4 class="mb-0">@selectedTicket.Title</h4>
-                                <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
-                                @if (selectedTicket.Status != "Resolved")
-                                {
-                                    <button class="btn btn-success btn-sm ms-auto" @onclick="() => ResolveTicket(selectedTicket.Id)" disabled="@isLoading">
-                                        <i class="bi bi-check-circle"></i> Mark as Resolved
-                                    </button>
-                                }
-                            </div>
-                            @if (selectedTicket.Status == "Resolved" && selectedTicket.ResolvedBy != null && selectedTicket.ResolvedDate.HasValue)
-                            {
+                <!-- Ticket Header -->
+                <div class="ticket-header">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <h4 class="mb-0">@selectedTicket.Title</h4>
+                        <span class="badge @GetStatusBadgeClass(selectedTicket.Status)">@selectedTicket.Status</span>
+                        @if (selectedTicket.Status == "InResolution")
+                        {
+                            <button class="btn btn-success btn-sm ms-auto" @onclick="() => ResolveTicket(selectedTicket.Id)" disabled="@isLoading">
+                                <i class="bi bi-check-circle"></i> Mark as Resolved
+                            </button>
+                        }
+                    </div>
+                    @if (selectedTicket.Status == "Resolved" && selectedTicket.ResolvedBy != null && selectedTicket.ResolvedDate.HasValue)
+                    {
+                        <div class="small text-muted">
+                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                            Resolved by <strong>@selectedTicket.ResolvedBy.Name</strong> on @selectedTicket.ResolvedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                        </div>
+                    }
+                    
+                    <!-- Ticket Description Card -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <p class="card-text">@selectedTicket.Description</p>
+                            <div class="d-flex justify-content-between align-items-center">
                                 <div class="small text-muted">
-                                    <i class="bi bi-check-circle-fill text-success me-1"></i>
-                                    Resolved by <strong>@selectedTicket.ResolvedBy.Name</strong> on @selectedTicket.ResolvedDate.Value.ToString("MMM dd, yyyy HH:mm")
+                                    <div>@(selectedTicket.Creator?.Name ?? "Unknown")</div>
+                                    <div>@(selectedTicket.Creator?.PlayerNumber ?? "N/A") • @selectedTicket.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
                                 </div>
-                            }
-                        </div>
-                        
-                        <!-- Ticket Description Card -->
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <p class="card-text">@selectedTicket.Description</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div class="small text-muted">
-                                        <div>@(selectedTicket.Creator?.Name ?? "Unknown")</div>
-                                        <div>@(selectedTicket.Creator?.PlayerNumber ?? "N/A") • @selectedTicket.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
-                                    </div>
-                                    <div class="avatar-placeholder">
-                                        @if (!string.IsNullOrEmpty(selectedTicket.Creator?.Avatar))
-                                        {
-                                            <img src="@selectedTicket.Creator.Avatar" alt="@(selectedTicket.Creator?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
-                                        }
-                                        else
-                                        {
-                                            <i class="bi bi-person-circle fs-4 text-primary"></i>
-                                        }
-                                    </div>
+                                <div class="avatar-placeholder">
+                                    @if (!string.IsNullOrEmpty(selectedTicket.Creator?.Avatar))
+                                    {
+                                        <img src="@selectedTicket.Creator.Avatar" alt="@(selectedTicket.Creator?.Name ?? "User")" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;" />
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+                                    }
                                 </div>
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Messages Area -->
-                    <div class="flex-grow-1 overflow-auto p-3">
-                        @if (selectedTicket.Messages?.Any() == true)
+                </div>
+                
+                <!-- Messages Container -->
+                <div class="ticket-messages-container">
+                    @if (selectedTicket.Messages?.Any() == true)
+                    {
+                        @foreach (var message in selectedTicket.Messages)
                         {
-                            @foreach (var message in selectedTicket.Messages)
-                            {
-                                var isFromAgent = message.Author?.UserType == "Agent";
-                                <MessageCard Message="message" IsFromAgent="isFromAgent" />
-                            }
+                            var isFromAgent = message.Author?.UserType == "Agent";
+                            <MessageCard Message="message" IsFromAgent="isFromAgent" />
                         }
-                        else
-                        {
-                            <div class="text-center text-muted">
-                                <i class="bi bi-chat-text fs-1"></i>
-                                <p>No messages yet. Start helping the customer!</p>
-                            </div>
-                        }
-                    </div>
-                    
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-chat-text fs-1"></i>
+                            <p>No messages yet. Start helping the customer!</p>
+                        </div>
+                    }
+                </div>
+                
+                <!-- Sticky Reply Input -->
+                <div class="reply-input-sticky">
                     <MessageReplyInput OnReplyResult="OnReplyResult" />
                 </div>
             }

@@ -189,7 +189,6 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 - Using Signalr for ticket update notifications and refresh.
 - Paging mechanism for loading tickets and messages in a ticket thread.
 - Apply rate limit to APIs
-- Making the list of message replies in scrollable pane with sticky message reply input at bottom.
 - More robust token authentication and authorization with id, access, and refresh tokens instead of single JWT.
 - Use cloud blob storage to host user's avatar images
 - Generate better OpenApi documentation by adding comprehensive HTTP status code attributes on each API.
@@ -228,6 +227,36 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 
 ## Change Log
+
+### Version 1.35.0 - Sticky Reply Input with Scrollable Messages
+- **CustomerServiceApp.Web v1.35.0**: Enhanced UX with sticky reply input and auto-scrolling messages
+
+#### 🚀 **NEW FEATURES**:
+- **Sticky Reply Input Layout**:
+  - Added `ticket-layout.css` with responsive sticky positioning system
+  - Reply input now stays fixed at bottom of viewport while messages scroll
+  - Full viewport height utilization with proper flexbox layout
+  - Custom scrollbar styling for improved visual aesthetics
+  - Mobile-responsive design with breakpoints at 768px and 576px
+
+- **Auto-Scroll Functionality**:
+  - Added `ticket-layout.js` with smart scroll management
+  - `scrollMessagesToBottom()` - Forces scroll to bottom for new messages
+  - `scrollToBottomIfNearEnd()` - Conditional scrolling based on user position
+  - `initializeTicketLayout()` - Initializes auto-scroll behavior
+  - Smooth scrolling animation with `scroll-behavior: smooth`
+
+- **Enhanced Layout Components**:
+  - Updated `TicketLayout.razor` with JavaScript interop for auto-scroll
+  - Restructured `PlayerTickets.razor` with new CSS classes and layout
+  - Restructured `AgentTickets.razor` with consistent sticky layout
+  - Improved semantic structure with ticket-specific CSS classes
+
+#### 💡 **UI/UX IMPROVEMENTS**:
+- Messages container now properly scrollable with overflow handling
+- Reply input always visible and accessible at screen bottom
+- Consistent layout behavior across both player and agent interfaces
+- Enhanced mobile experience with proper touch scrolling
 
 ### Version 1.34.0 - GetUnresolvedTicketsAsync API Optimization
 - **CustomerServiceApp.Web v1.34.0**: Enhanced API efficiency for agent ticket operations
