@@ -228,6 +228,29 @@ The system uses PBKDF2 with salted hashing for secure password storage:
 
 ## Change Log
 
+### Version 1.11.0 - Configurable CORS Settings Refactoring
+- **CustomerServiceApp.API v1.11.0**: Enhanced configuration management for CORS settings
+
+#### 🚀 **NEW FEATURES**:
+- **Configuration-Based CORS**:
+  - Added `CorsOptions` configuration class for strongly-typed CORS settings
+  - Updated `appsettings.json` and `appsettings.Development.json` with CORS configuration section
+  - Replaced hardcoded frontend origin with configurable `AllowedOrigins` array
+  - Support for configurable `AllowedMethods` and `AllowedHeaders` arrays
+  - Improved maintainability by centralizing CORS configuration
+
+#### 🔧 **REFACTORING**:
+- Removed hardcoded `"https://localhost:7131"` origin from Program.cs
+- Enhanced Program.cs with configuration binding for CORS settings
+- Added conditional CORS policy application based on configuration presence
+- Better separation of concerns between configuration and application logic
+
+#### 💡 **CONFIGURATION IMPROVEMENTS**:
+- CORS settings now easily configurable for different environments
+- Supports multiple allowed origins for production deployments
+- Flexible configuration with fallback to sensible defaults
+- Enhanced security through explicit origin configuration
+
 ### Version 1.35.0 - Sticky Reply Input with Scrollable Messages
 - **CustomerServiceApp.Web v1.35.0**: Enhanced UX with sticky reply input and auto-scrolling messages
 
